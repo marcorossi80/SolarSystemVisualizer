@@ -1,14 +1,29 @@
 import React from 'react';
 
-const InfoPanel: React.FC = () => {
+interface InfoPanelProps {
+  currentDate: Date;
+}
+
+const InfoPanel: React.FC<InfoPanelProps> = ({ currentDate }) => {
+  // Format the date nicely
+  const formattedDate = currentDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
   return (
     <div className="absolute top-4 right-4 w-64 bg-black bg-opacity-30 backdrop-blur-sm p-4 rounded-lg shadow-lg max-h-[calc(100vh-2rem)] overflow-y-auto">
       <h2 className="text-xl font-bold border-b border-gray-700 pb-2 mb-4">Solar System</h2>
       <div className="space-y-3">
-        <p className="text-sm"><span className="text-gray-400">Date:</span> April 1, 2025</p>
+        <p className="text-sm"><span className="text-gray-400">Date:</span> {formattedDate}</p>
         <p className="text-sm">
           This visualization shows our solar system with all planets to scale, including both size and distance. 
-          The positions shown reflect where planets will be on April 1, 2025.
+          The positions shown reflect where planets are on the displayed date.
+        </p>
+        <p className="text-sm text-primary">
+          <i className="fas fa-play mr-1"></i> 
+          Use the play button to animate planet movements.
         </p>
         <div className="mt-4">
           <h3 className="text-sm font-bold border-b border-gray-700 pb-1 mb-2">Legend</h3>

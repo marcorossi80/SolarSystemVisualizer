@@ -6,6 +6,7 @@ interface SolarSystemProps {
   panX: number;
   panY: number;
   isTrueScale: boolean;
+  currentDate: Date;
   onPan: (deltaX: number, deltaY: number) => void;
   onZoom: (factor: number) => void;
 }
@@ -14,7 +15,8 @@ const SolarSystem: React.FC<SolarSystemProps> = ({
   scale, 
   panX, 
   panY, 
-  isTrueScale, 
+  isTrueScale,
+  currentDate,
   onPan, 
   onZoom 
 }) => {
@@ -23,8 +25,8 @@ const SolarSystem: React.FC<SolarSystemProps> = ({
   const [lastX, setLastX] = useState(0);
   const [lastY, setLastY] = useState(0);
   
-  // Get planet data and positions
-  const celestialBodies = calculatePlanetPositions(new Date('April 1, 2025'));
+  // Get planet data and positions with the current date
+  const celestialBodies = calculatePlanetPositions(currentDate);
   
   const draw = (context: CanvasRenderingContext2D, width: number, height: number) => {
     context.fillStyle = '#050505';
@@ -47,13 +49,18 @@ const SolarSystem: React.FC<SolarSystemProps> = ({
     for (let i = 1; i < celestialBodies.length; i++) {
       const planet = celestialBodies[i];
       
+      // Calculate semi-minor axis (b) using semi-major axis (a) and eccentricity (e)
+      const semiMajor = planet.orbit.a * planet.AU * scaleFactor;
+      const semiMinor = semiMajor * Math.sqrt(1 - Math.pow(planet.orbit.e, 2));
+      
+      // Draw elliptical orbit with proper inclination
       context.beginPath();
       context.ellipse(
         centerX, 
         centerY, 
-        planet.orbit.a * planet.AU * scaleFactor, 
-        planet.orbit.a * planet.AU * scaleFactor * Math.cos(planet.orbit.i * Math.PI / 180), 
-        0, 
+        semiMajor, 
+        semiMinor, 
+        planet.orbit.lp * Math.PI / 180, // Use longitude of perihelion for rotation angle
         0, 
         2 * Math.PI
       );
@@ -141,7 +148,7 @@ const SolarSystem: React.FC<SolarSystemProps> = ({
     return () => {
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, [scale, panX, panY, isTrueScale]);
+  }, [scale, panX, panY, isTrueScale, currentDate]);
   
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
