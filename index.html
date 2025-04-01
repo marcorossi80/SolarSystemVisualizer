@@ -1,69 +1,603 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System Visualizer - Redirecting</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 0 1rem;
-        }
-        h1 {
-            margin-bottom: 1rem;
-            font-size: 2rem;
-        }
-        p {
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
-            max-width: 600px;
-            line-height: 1.5;
-        }
-        .redirect-message {
-            margin-top: 2rem;
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #ffffff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
-    <script>
-        // Automatically redirect to the static build
-        window.onload = function() {
-            // Check if we're already at the correct location
-            if (window.location.pathname.includes("/dist/public/")) {
-                return;
-            }
-            
-            // Otherwise redirect to the static build
-            setTimeout(function() {
-                window.location.href = "./dist/public/index.html";
-            }, 1500);
-        };
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar System Visualization - April 1, 2025</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #050505;
+      color: #EEEEEE;
+      font-family: "Space Mono", monospace;
+    }
+    
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .control-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: rgba(10, 10, 10, 0.7);
+      border-radius: 8px;
+      padding: 15px;
+      z-index: 10;
+    }
+    
+    .scale-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: rgba(10, 10, 10, 0.7);
+      border-radius: 8px;
+      padding: 15px;
+      z-index: 10;
+    }
+    
+    .info-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background-color: rgba(10, 10, 10, 0.7);
+      border-radius: 8px;
+      padding: 15px;
+      z-index: 10;
+    }
+    
+    .speed-control {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(10, 10, 10, 0.7);
+      border-radius: 8px;
+      padding: 15px;
+      z-index: 10;
+    }
+    
+    button {
+      background-color: #2E71B8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 4px;
+      cursor: pointer;
+      font-family: "Space Mono", monospace;
+    }
+    
+    button:hover {
+      background-color: #3A86D7;
+    }
+    
+    button:active {
+      background-color: #1E5A99;
+    }
+    
+    button.active {
+      background-color: #D14C32;
+    }
+    
+    .btn-group {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    
+    select {
+      background-color: #2E71B8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 4px;
+      cursor: pointer;
+      font-family: "Space Mono", monospace;
+    }
+    
+    h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Solar System Visualizer</h1>
-    <p>An interactive visualization of our solar system with accurate planet positions as of April 1, 2025</p>
-    <div class="spinner"></div>
-    <p class="redirect-message">Redirecting to the application...</p>
+  <canvas id="solar-system"></canvas>
+  
+  <div class="control-panel">
+    <h3>Controls</h3>
+    <div class="btn-group">
+      <button id="zoom-in"><i class="fas fa-search-plus"></i> Zoom +</button>
+      <button id="zoom-out"><i class="fas fa-search-minus"></i> Zoom -</button>
+    </div>
+    <button id="reset-view"><i class="fas fa-sync"></i> Reset View</button>
+    <button id="toggle-animation"><i class="fas fa-play"></i> Animate</button>
+  </div>
+  
+  <div class="scale-toggle">
+    <h3>Size Scale</h3>
+    <button id="toggle-scale"><i class="fas fa-ruler"></i> <span id="scale-text">True Scale</span></button>
+  </div>
+  
+  <div class="info-panel">
+    <h3>Solar System</h3>
+    <p>Date: <span id="current-date">April 1, 2025</span></p>
+  </div>
+  
+  <div class="speed-control">
+    <h3>Animation Speed</h3>
+    <select id="speed-select">
+      <option value="0.5">0.5x</option>
+      <option value="1" selected>1x</option>
+      <option value="2">2x</option>
+      <option value="5">5x</option>
+      <option value="10">10x</option>
+    </select>
+  </div>
+
+  <script>
+    // Astronomical constants
+    const AU = 149597870.7; // Astronomical Unit in km
+
+    // Interface for celestial body position
+    class Position {
+      constructor(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+      }
+    }
+
+    // Interface for orbital elements
+    class OrbitalElements {
+      constructor(a = 0, e = 0, i = 0, L = 0, lp = 0, o = 0) {
+        this.a = a;    // semi-major axis (AU)
+        this.e = e;    // eccentricity
+        this.i = i;    // inclination (degrees)
+        this.L = L;    // mean longitude (degrees)
+        this.lp = lp;  // longitude of perihelion (degrees)
+        this.o = o;    // longitude of ascending node (degrees)
+      }
+    }
+
+    // Interface for celestial body
+    class CelestialBody {
+      constructor(name, radius, color, distance, orbit, AU) {
+        this.name = name;
+        this.radius = radius;
+        this.color = color;
+        this.distance = distance;
+        this.orbit = orbit;
+        this.AU = AU;
+        this.position = new Position();
+        this.gradient = false;
+        this.rings = false;
+      }
+    }
+
+    /**
+     * Calculate the position of a planet based on its orbital elements
+     * @param {OrbitalElements} planet Orbital elements of the planet
+     * @param {Date} date Target date for calculation
+     * @returns {Position} x, y coordinates
+     */
+    function calculatePosition(planet, date) {
+      // Number of days since J2000.0 (January 1, 2000, 12:00 UTC)
+      const j2000 = new Date('January 1, 2000 12:00:00 UTC');
+      const daysSinceJ2000 = (date.getTime() - j2000.getTime()) / (1000 * 60 * 60 * 24);
+      
+      // Simple orbital period calculation (in Earth days)
+      const period = 365.25 * Math.pow(planet.a, 1.5); // Kepler's third law
+      
+      // Mean anomaly (M) calculation
+      const M = (planet.L - planet.lp + (daysSinceJ2000 * 360 / period)) % 360;
+      const M_rad = M * Math.PI / 180;
+      
+      // Solve Kepler's equation iteratively for eccentric anomaly (E)
+      let E = M_rad;
+      let delta = 1;
+      while (Math.abs(delta) > 1e-6) {
+        delta = E - planet.e * Math.sin(E) - M_rad;
+        E = E - delta / (1 - planet.e * Math.cos(E));
+      }
+      
+      // True anomaly (v)
+      const v = 2 * Math.atan(Math.sqrt((1 + planet.e) / (1 - planet.e)) * Math.tan(E / 2));
+      
+      // Heliocentric distance
+      const r = planet.a * (1 - planet.e * Math.cos(E));
+      
+      // Convert to cartesian coordinates
+      const xh = r * (Math.cos(planet.o * Math.PI / 180) * Math.cos(v + planet.lp * Math.PI / 180 - planet.o * Math.PI / 180) - 
+                     Math.sin(planet.o * Math.PI / 180) * Math.sin(v + planet.lp * Math.PI / 180 - planet.o * Math.PI / 180) * Math.cos(planet.i * Math.PI / 180));
+      const yh = r * (Math.sin(planet.o * Math.PI / 180) * Math.cos(v + planet.lp * Math.PI / 180 - planet.o * Math.PI / 180) + 
+                     Math.cos(planet.o * Math.PI / 180) * Math.sin(v + planet.lp * Math.PI / 180 - planet.o * Math.PI / 180) * Math.cos(planet.i * Math.PI / 180));
+      
+      return new Position(xh, yh);
+    }
+
+    /**
+     * Calculate planet positions for a given date
+     * @param {Date} date Date to calculate positions for
+     * @returns Array of celestial bodies with positions
+     */
+    function calculatePlanetPositions(date) {
+      // Planet data with real dimensions and orbital elements for April 1, 2025
+      const celestialBodies = [
+        new CelestialBody(
+          'Sun', 
+          696340,
+          '#FDB813',
+          0,
+          new OrbitalElements(0, 0, 0, 0, 0, 0),
+          AU
+        ),
+        new CelestialBody(
+          'Mercury', 
+          2439.7,
+          '#BDBDBD',
+          0.387 * AU,
+          new OrbitalElements(0.387, 0.206, 7.005, 252.3, 77.5, 48.3),
+          AU
+        ),
+        new CelestialBody(
+          'Venus', 
+          6051.8,
+          '#E6E6B8',
+          0.723 * AU,
+          new OrbitalElements(0.723, 0.007, 3.39, 181.2, 131.6, 76.7),
+          AU
+        ),
+        new CelestialBody(
+          'Earth', 
+          6371,
+          '#2E71B8',
+          1.0 * AU,
+          new OrbitalElements(1.0, 0.017, 0.0, 100.5, 102.9, 0.0),
+          AU
+        ),
+        new CelestialBody(
+          'Mars', 
+          3389.5,
+          '#D14C32',
+          1.524 * AU,
+          new OrbitalElements(1.524, 0.093, 1.85, 19.4, 336.1, 49.6),
+          AU
+        ),
+        new CelestialBody(
+          'Jupiter', 
+          69911,
+          '#E3A857',
+          5.203 * AU,
+          new OrbitalElements(5.203, 0.048, 1.31, 20.5, 14.8, 100.5),
+          AU
+        ),
+        new CelestialBody(
+          'Saturn', 
+          58232,
+          '#E5DACE',
+          9.555 * AU,
+          new OrbitalElements(9.555, 0.054, 2.49, 42.4, 92.4, 113.7),
+          AU
+        ),
+        new CelestialBody(
+          'Uranus', 
+          25362,
+          '#99CCCE',
+          19.22 * AU,
+          new OrbitalElements(19.22, 0.047, 0.77, 314.1, 170.9, 74.0),
+          AU
+        ),
+        new CelestialBody(
+          'Neptune', 
+          24622,
+          '#3A75C4',
+          30.11 * AU,
+          new OrbitalElements(30.11, 0.009, 1.77, 304.4, 44.9, 131.8),
+          AU
+        )
+      ];
+
+      // Set special properties
+      celestialBodies[0].gradient = true; // Sun has gradient
+      celestialBodies[6].rings = true;    // Saturn has rings
+
+      // Calculate positions for each planet (except the Sun)
+      for (let i = 1; i < celestialBodies.length; i++) {
+        celestialBodies[i].position = calculatePosition(celestialBodies[i].orbit, date);
+      }
+
+      return celestialBodies;
+    }
+
+    // Main Solar System class
+    class SolarSystemRenderer {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.scale = 1.0;
+        this.panX = 0;
+        this.panY = 0;
+        this.isDragging = false;
+        this.lastX = 0;
+        this.lastY = 0;
+        this.isTrueScale = true;
+        this.currentDate = new Date('April 1, 2025');
+        this.isAnimating = false;
+        this.animationSpeed = 1;
+        this.animationFrameId = null;
+        this.lastTimestamp = 0;
+        
+        // Get celestial bodies
+        this.celestialBodies = calculatePlanetPositions(this.currentDate);
+        
+        this.setupEventListeners();
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        
+        // Render initial state
+        this.render();
+      }
+      
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.render();
+      }
+      
+      render() {
+        this.ctx.fillStyle = '#050505';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        const centerX = this.canvas.width / 2 + this.panX;
+        const centerY = this.canvas.height / 2 + this.panY;
+        
+        // Calculate the base scale factor to fit the largest orbit in view
+        const maxDistance = this.celestialBodies[this.celestialBodies.length - 1].distance;
+        const baseScaleFactor = Math.min(this.canvas.width, this.canvas.height) / (maxDistance * 2.2);
+        
+        // Apply the user zoom scale
+        const scaleFactor = baseScaleFactor * this.scale;
+        
+        // Draw orbital paths
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        this.ctx.lineWidth = 1;
+        
+        for (let i = 1; i < this.celestialBodies.length; i++) {
+          const planet = this.celestialBodies[i];
+          
+          // Calculate semi-minor axis (b) using semi-major axis (a) and eccentricity (e)
+          const semiMajor = planet.orbit.a * planet.AU * scaleFactor;
+          const semiMinor = semiMajor * Math.sqrt(1 - Math.pow(planet.orbit.e, 2));
+          
+          // Draw elliptical orbit with proper inclination
+          this.ctx.beginPath();
+          this.ctx.ellipse(
+            centerX, 
+            centerY, 
+            semiMajor, 
+            semiMinor, 
+            planet.orbit.lp * Math.PI / 180, // Use longitude of perihelion for rotation angle
+            0, 
+            2 * Math.PI
+          );
+          this.ctx.stroke();
+        }
+        
+        // Draw planets
+        for (let i = 0; i < this.celestialBodies.length; i++) {
+          const body = this.celestialBodies[i];
+          
+          // Calculate position
+          let x, y;
+          if (body.name === 'Sun') {
+            x = centerX;
+            y = centerY;
+          } else {
+            const position = body.position;
+            x = centerX + position.x * body.AU * scaleFactor;
+            y = centerY + position.y * body.AU * scaleFactor;
+          }
+          
+          // Calculate radius (either true scale or enhanced for visibility)
+          let radius;
+          if (this.isTrueScale) {
+            radius = Math.max(body.radius * scaleFactor, 1); // Minimum 1px so very small planets are still visible
+          } else {
+            // Enhanced size for visibility - logarithmic scale
+            radius = 5 + Math.log(body.radius / 2000) * 8;
+            if (body.name === 'Sun') {
+              radius = 20;
+            }
+          }
+          
+          // Draw the celestial body
+          if (body.gradient && body.name === 'Sun') {
+            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, radius);
+            gradient.addColorStop(0, '#FDB813');
+            gradient.addColorStop(1, '#F89E0F');
+            this.ctx.fillStyle = gradient;
+          } else {
+            this.ctx.fillStyle = body.color;
+          }
+          
+          this.ctx.beginPath();
+          this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
+          this.ctx.fill();
+          
+          // Draw Saturn's rings if applicable
+          if (body.rings) {
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.ellipse(x, y, radius * 2, radius * 0.5, Math.PI / 6, 0, 2 * Math.PI);
+            this.ctx.strokeStyle = 'rgba(229, 218, 206, 0.8)';
+            this.ctx.lineWidth = radius * 0.3;
+            this.ctx.stroke();
+            this.ctx.restore();
+          }
+          
+          // Draw label
+          this.ctx.fillStyle = '#EEEEEE';
+          this.ctx.font = '12px "Space Mono", monospace';
+          this.ctx.textAlign = 'center';
+          this.ctx.textBaseline = 'top';
+          this.ctx.fillText(body.name, x, y + radius + 8);
+        }
+      }
+      
+      setupEventListeners() {
+        // Mouse controls for panning
+        this.canvas.addEventListener('mousedown', (e) => {
+          this.isDragging = true;
+          this.lastX = e.clientX;
+          this.lastY = e.clientY;
+        });
+        
+        this.canvas.addEventListener('mousemove', (e) => {
+          if (!this.isDragging) return;
+          
+          const deltaX = e.clientX - this.lastX;
+          const deltaY = e.clientY - this.lastY;
+          
+          this.panX += deltaX;
+          this.panY += deltaY;
+          
+          this.lastX = e.clientX;
+          this.lastY = e.clientY;
+          
+          this.render();
+        });
+        
+        const endDrag = () => {
+          this.isDragging = false;
+        };
+        
+        this.canvas.addEventListener('mouseup', endDrag);
+        this.canvas.addEventListener('mouseleave', endDrag);
+        
+        // Wheel for zooming
+        this.canvas.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          
+          // Determine zoom direction and factor
+          const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+          
+          // Apply zoom with limits
+          this.scale *= zoomFactor;
+          this.scale = Math.min(Math.max(this.scale, 0.0005), 100);
+          
+          this.render();
+        });
+        
+        // Control buttons
+        document.getElementById('zoom-in').addEventListener('click', () => {
+          this.scale = Math.min(this.scale * 1.2, 100);
+          this.render();
+        });
+        
+        document.getElementById('zoom-out').addEventListener('click', () => {
+          this.scale = Math.max(this.scale * 0.8, 0.0005);
+          this.render();
+        });
+        
+        document.getElementById('reset-view').addEventListener('click', () => {
+          this.scale = 1.0;
+          this.panX = 0;
+          this.panY = 0;
+          this.render();
+        });
+        
+        document.getElementById('toggle-scale').addEventListener('click', () => {
+          this.isTrueScale = !this.isTrueScale;
+          document.getElementById('scale-text').textContent = this.isTrueScale ? 'True Scale' : 'Enhanced Scale';
+          this.render();
+        });
+        
+        document.getElementById('toggle-animation').addEventListener('click', () => {
+          this.toggleAnimation();
+          document.getElementById('toggle-animation').innerHTML = this.isAnimating ? 
+            '<i class="fas fa-pause"></i> Pause' : 
+            '<i class="fas fa-play"></i> Animate';
+        });
+        
+        document.getElementById('speed-select').addEventListener('change', (e) => {
+          this.animationSpeed = parseFloat(e.target.value);
+        });
+      }
+      
+      toggleAnimation() {
+        this.isAnimating = !this.isAnimating;
+        
+        if (this.isAnimating) {
+          this.startAnimation();
+        } else if (this.animationFrameId) {
+          cancelAnimationFrame(this.animationFrameId);
+          this.animationFrameId = null;
+        }
+      }
+      
+      startAnimation() {
+        this.lastTimestamp = 0;
+        
+        const animate = (timestamp) => {
+          if (!this.lastTimestamp) this.lastTimestamp = timestamp;
+          
+          // Advance time based on elapsed milliseconds and animation speed
+          const elapsed = timestamp - this.lastTimestamp;
+          const daysToAdvance = (elapsed / 50) * this.animationSpeed;
+          
+          // Update date
+          const newDate = new Date(this.currentDate);
+          newDate.setDate(newDate.getDate() + daysToAdvance);
+          this.currentDate = newDate;
+          
+          // Update date display
+          document.getElementById('current-date').textContent = this.currentDate.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          
+          // Recalculate planet positions
+          this.celestialBodies = calculatePlanetPositions(this.currentDate);
+          
+          // Render the new state
+          this.render();
+          
+          this.lastTimestamp = timestamp;
+          
+          if (this.isAnimating) {
+            this.animationFrameId = requestAnimationFrame(animate);
+          }
+        };
+        
+        this.animationFrameId = requestAnimationFrame(animate);
+      }
+    }
+
+    // Load fonts
+    const fontStylesheet = document.createElement('link');
+    fontStylesheet.rel = 'stylesheet';
+    fontStylesheet.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono&display=swap';
+    document.head.appendChild(fontStylesheet);
+
+    // Add font awesome for icons
+    const fontAwesome = document.createElement('link');
+    fontAwesome.rel = 'stylesheet';
+    fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css';
+    document.head.appendChild(fontAwesome);
+
+    // Initialize the solar system when everything is loaded
+    window.addEventListener('load', () => {
+      const solarSystem = new SolarSystemRenderer('solar-system');
+    });
+  </script>
 </body>
 </html>

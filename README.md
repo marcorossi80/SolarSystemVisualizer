@@ -1,59 +1,66 @@
 # Solar System Visualizer
 
-An interactive visualization of our solar system showing the planets' positions as of April 1, 2025. This project provides an accurate scale model of the solar system with interactive features.
+An interactive JavaScript visualization of the solar system showing the positions of planets as of April 1, 2025.
 
 ## Features
 
-- **Accurate Astronomical Data**: Planet positions calculated for April 1, 2025
-- **True Scale Toggle**: Switch between true astronomical scale and enhanced visibility scale
-- **Interactive Controls**: 
-  - Zoom in/out
-  - Pan the view
-  - Reset to default view
-- **Animation System**:
-  - Play/pause animation
-  - Adjust animation speed (0.5x to 10x)
-  - Real-time date updates as animation progresses
-- **Detailed Information**: View information about the current date and celestial bodies
+- 🪐 Accurate planetary positions based on astronomical calculations
+- 🔭 Interactive zoom and pan to explore the solar system
+- 📏 Toggle between true astronomical scale and enhanced visibility scale
+- ⏱️ Animation with adjustable speed to see planetary motion
+- 🛰️ Elliptical orbits that accurately represent planetary paths
+- 📅 Real-time date display during animation
 
-## Technologies Used
+## Technical Details
 
-- React
-- TypeScript
-- HTML Canvas for rendering
-- Mathematical orbital calculations
+This visualization uses JavaScript and the HTML5 Canvas API to render the solar system. Planet positions are calculated using:
 
-## Local Development
+- Keplerian orbital elements
+- Numerical solution of Kepler's equation
+- Conversion to cartesian coordinates
 
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
+### Astronomical Data
 
-### Installation
+The model includes:
+- The Sun and all eight planets
+- Accurate orbital parameters (semi-major axis, eccentricity, inclination, etc.)
+- Proper scaling of planetary sizes and orbital distances
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/marcorossi80/SolarSystemVisualizer.git
-   cd SolarSystemVisualizer
-   ```
+## Usage
 
-2. Install dependencies:
-   ```
-   npm install
-   ```
+### Controls
 
-3. Start the development server:
-   ```
-   npm run dev
-   ```
+- **Zoom**: Mouse wheel or zoom buttons
+- **Pan**: Click and drag to move the view
+- **Reset View**: Return to the default view
+- **Scale Toggle**: Switch between true scale and enhanced visibility
+- **Animation**: Play/pause planetary motion
+- **Speed Control**: Adjust animation speed from 0.5x to 10x
 
-4. Open your browser and navigate to `http://localhost:5000`
+## Development
 
-## Deployment
+### Running Locally
 
-The application is deployed on GitHub Pages at:
-[https://marcorossi80.github.io/SolarSystemVisualizer/](https://marcorossi80.github.io/SolarSystemVisualizer/)
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/SolarSystemVisualizer.git
+
+# Navigate to the project directory
+cd SolarSystemVisualizer
+
+# Start a local server
+python -m http.server 5000
+```
+
+Then open http://localhost:5000 in your browser.
+
+### Deployment
+
+The project includes deployment scripts for GitHub Pages:
+
+- Manual deployment: `./deploy-to-github.sh`
+- Automated deployment via GitHub Actions workflow
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT
