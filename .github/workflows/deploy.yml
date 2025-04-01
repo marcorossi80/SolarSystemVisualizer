@@ -3,28 +3,41 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # Or your default branch name
+      - main  # Set to default branch for your repository
+
+# Cancel in-progress deploys to the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to push to gh-pages branch
     steps:
-      - name: Checkout 🛎️
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js 🔧
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: 18
           cache: 'npm'
 
-      - name: Run build script 🏗️
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
         run: |
-          chmod +x ./build-for-deploy.sh
+          chmod +x build-for-deploy.sh
           ./build-for-deploy.sh
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          folder: dist # The folder the action should deploy
-          branch: gh-pages # The branch the action should deploy to
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          cname: ${{ vars.CNAME }}  # Will use the CNAME from GitHub repository variables if set
+          user_name: 'GitHub Actions'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
