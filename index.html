@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Visualizer - Redirecting</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 1rem;
+        }
+        h1 {
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        p {
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        .redirect-message {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        // Automatically redirect to the static build
+        window.onload = function() {
+            // Check if we're already at the correct location
+            if (window.location.pathname.includes("/dist/public/")) {
+                return;
+            }
+            
+            // Otherwise redirect to the static build
+            setTimeout(function() {
+                window.location.href = "./dist/public/index.html";
+            }, 1500);
+        };
+    </script>
+</head>
+<body>
+    <h1>Solar System Visualizer</h1>
+    <p>An interactive visualization of our solar system with accurate planet positions as of April 1, 2025</p>
+    <div class="spinner"></div>
+    <p class="redirect-message">Redirecting to the application...</p>
+</body>
+</html>
