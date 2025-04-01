@@ -3,77 +3,112 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 240 10% 4%;
+    --foreground: 210 40% 98%;
+
+    --card: 240 10% 6%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 240 10% 6%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
+ 
+    --accent: 240 5% 15%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 240 5% 26%;
+    --input: 240 5% 26%;
+    --ring: 240 5% 65%;
+ 
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground min-h-screen;
+    background-image: radial-gradient(
+      circle at center,
+      rgba(45, 55, 72, 0.5) 0%,
+      rgba(17, 24, 39, 0.2) 100%
+    ),
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231a1c2e' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E"),
+    linear-gradient(to bottom, #09090b, #111827);
+    background-size: 100% 100%, 30% 30%, 100% 100%;
+    background-attachment: fixed;
   }
 }
 
-:root {
-  --background: 240 20% 2%;
-  --foreground: 0 0% 93%;
-  --card: 240 10% 7%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 5%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 220 70% 50%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4% 16%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 4% 16%;
-  --muted-foreground: 240 5% 65%;
-  --accent: 240 4% 16%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 63% 50%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 4% 16%;
-  --input: 240 4% 16%;
-  --ring: 240 5% 65%;
-  --radius: 0.5rem;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #050505;
-  overflow: hidden;
-}
-
-.planet-label {
-  font-family: 'Space Mono', monospace;
-  pointer-events: none;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-  white-space: nowrap;
-}
-
-.control-btn {
-  transition: all 0.2s ease;
-}
-
-.control-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-canvas {
+/* Solar System specific styles */
+.canvas-container {
+  @apply w-full overflow-hidden relative;
   touch-action: none;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
+.planet {
+  @apply absolute rounded-full transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+.planet-shadow {
+  @apply absolute rounded-full bg-black opacity-50 blur-sm;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+.orbit {
+  @apply border border-gray-700 opacity-20 absolute rounded-full transform -translate-x-1/2 -translate-y-1/2;
+  border-style: dashed;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+/* Control panel styles */
+.control-panel {
+  @apply fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-2 px-4 py-3 rounded-full bg-black/70 backdrop-blur-md border border-gray-800 z-40 items-center;
+}
+
+.control-button {
+  @apply rounded-full p-2 transition-all hover:bg-gray-800 text-gray-300 hover:text-white;
+}
+
+.info-panel {
+  @apply fixed right-8 top-8 w-80 p-4 rounded-lg bg-black/70 backdrop-blur-md border border-gray-800 z-40 text-sm text-gray-300;
+}
+
+.info-panel-title {
+  @apply text-lg font-medium mb-2 text-white;
+}
+
+.planet-label {
+  @apply absolute text-xs text-white/80 whitespace-nowrap transform translate-y-4 z-10;
+}
+
+/* Saturn rings */
+.saturn-rings {
+  @apply absolute rounded-full border-2 border-amber-200/70 transform -translate-x-1/2 -translate-y-1/2 rotate-12;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.pulse {
+  animation: pulse 3s ease-in-out infinite;
 }

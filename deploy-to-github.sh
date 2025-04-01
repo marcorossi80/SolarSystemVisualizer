@@ -1,16 +1,10 @@
 #!/bin/bash
 
-# Create deployment directory
-mkdir -p dist
+# Execute the build script
+chmod +x ./build-for-deploy.sh
+./build-for-deploy.sh
 
-# Copy the standalone HTML file to dist
-cp index.html dist/index.html
-
-# If you have additional files (like images or js), copy them too
-# cp -r images dist/images
-# cp -r js dist/js
-
-echo "Files prepared for deployment in ./dist folder"
+echo "===== Files prepared for deployment ====="
 echo "To deploy to GitHub Pages:"
 echo "1. Push this repository to GitHub"
 echo "2. Go to your repository settings"
