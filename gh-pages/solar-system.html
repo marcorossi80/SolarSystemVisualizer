@@ -853,13 +853,21 @@
           
           ctx.stroke();
           
-          // Draw the satellite
-          const satRadius = Math.max(2, satellite.radius * planetScale(planet) * scale * 10);
+          // Draw the satellite with enhanced visibility
+          // Make satellites larger and more visible in the visualization
+          const satRadius = Math.max(3, satellite.radius * planetScale(planet) * scale * 20);
           
           ctx.beginPath();
           ctx.fillStyle = satellite.color;
           ctx.arc(satX, satY, satRadius, 0, Math.PI * 2);
           ctx.fill();
+          
+          // Add a white outline to make satellites more visible
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 1;
+          ctx.arc(satX, satY, satRadius + 1, 0, Math.PI * 2);
+          ctx.stroke();
         });
       }
       
@@ -1032,9 +1040,10 @@
             for (const satellite of planet.satellites) {
               const satX = x + satellite.position.x * scale;
               const satY = y + satellite.position.y * scale;
-              const satRadius = Math.max(2, satellite.radius * planetScale(planet) * scale * 10);
+              // Use the same size calculation as in drawing
+              const satRadius = Math.max(3, satellite.radius * planetScale(planet) * scale * 20);
               
-              if (isPointInCircle(e.clientX, e.clientY, satX, satY, satRadius)) {
+              if (isPointInCircle(e.clientX, e.clientY, satX, satY, satRadius + 1)) {
                 tooltip.innerHTML = `${satellite.name}<br>Moon of ${planet.name}<br>Radius: ${satellite.radius.toLocaleString()} km`;
                 tooltip.classList.add('tooltip-visible');
                 return;
