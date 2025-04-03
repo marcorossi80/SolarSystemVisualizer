@@ -831,10 +831,10 @@
           const satX = x + satellite.position.x * scale;
           const satY = y + satellite.position.y * scale;
           
-          // Draw satellite orbit
+          // Draw satellite orbit - make orbits more visible
           ctx.beginPath();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-          ctx.lineWidth = 0.5;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.lineWidth = 1;
           
           // Satellite orbit is an ellipse
           const orbitRadius = satellite.semiMajorAxis * planet.radius / AU * scale;
@@ -855,31 +855,41 @@
           
           // Draw the satellite with enhanced visibility
           // Make satellites larger and more visible in the visualization
-          const satRadius = Math.max(3, satellite.radius * planetScale(planet) * scale * 20);
+          const satRadius = Math.max(4, satellite.radius * planetScale(planet) * scale * 25);
           
           ctx.beginPath();
-          ctx.fillStyle = satellite.color;
+          // Create gradient for satellites to make them look more like planets
+          const satGradient = ctx.createRadialGradient(satX, satY, 0, satX, satY, satRadius);
+          satGradient.addColorStop(0, satellite.color);
+          satGradient.addColorStop(1, shadeColor(satellite.color, -20));
+          ctx.fillStyle = satGradient;
           ctx.arc(satX, satY, satRadius, 0, Math.PI * 2);
           ctx.fill();
           
           // Add a white outline to make satellites more visible
           ctx.beginPath();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.lineWidth = 1.5;
           ctx.arc(satX, satY, satRadius + 1, 0, Math.PI * 2);
           ctx.stroke();
           
-          // Add satellite name label
+          // Add satellite name label - always visible
           const labelX = satX;
           const labelY = satY - satRadius - 5;
           
-          // Only show labels when zoomed in enough
-          if (scale > 100 || (selectedPlanet && selectedPlanet.name === planet.name)) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.font = '10px var(--font-sans)';
-            ctx.textAlign = 'center';
-            ctx.fillText(satellite.name, labelX, labelY);
-          }
+          // Always show satellite labels
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.font = '11px var(--font-sans)';
+          ctx.textAlign = 'center';
+          
+          // Add a slight shadow behind text for better readability
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+          ctx.shadowBlur = 3;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.fillText(satellite.name, labelX, labelY);
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
         });
       }
       
@@ -1052,11 +1062,11 @@
             for (const satellite of planet.satellites) {
               const satX = x + satellite.position.x * scale;
               const satY = y + satellite.position.y * scale;
-              // Use the same size calculation as in drawing
-              const satRadius = Math.max(3, satellite.radius * planetScale(planet) * scale * 20);
+              // Use the same size calculation as in drawing - match the new larger size
+              const satRadius = Math.max(4, satellite.radius * planetScale(planet) * scale * 25);
               
-              if (isPointInCircle(e.clientX, e.clientY, satX, satY, satRadius + 1)) {
-                tooltip.innerHTML = `${satellite.name}<br>Moon of ${planet.name}<br>Radius: ${satellite.radius.toLocaleString()} km`;
+              if (isPointInCircle(e.clientX, e.clientY, satX, satY, satRadius + 1.5)) {
+                tooltip.innerHTML = `${satellite.name}<br>Moon of ${planet.name}<br>Radius: ${satellite.radius.toLocaleString()} km<br>Orbital Period: ${satellite.period.toFixed(2)} days`;
                 tooltip.classList.add('tooltip-visible');
                 return;
               }

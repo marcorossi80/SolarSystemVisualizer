@@ -11,20 +11,23 @@ This interactive visualization shows the positions of the planets and their majo
 
 ## About the Satellite Visualization
 
-The latest update improves the visibility of satellites (moons) around the planets. Each planet displays up to 3 of its largest satellites with:
+The latest update greatly improves the visibility of satellites (moons) around the planets. Each planet displays up to 3 of its largest satellites with:
 - Increased size for better visibility
-- White outline to make them stand out
-- Permanent name labels for easy identification
-- Accurate orbital positions relative to their parent planet
+- Visible orbital paths around their parent planets
+- Permanent name labels that are always displayed
+- Beautiful gradients and outlines matching planet styling
+- Animated motion exactly like the planets (in real time)
+- Text shadow for improved readability against any background
 
 ## Instructions
 
 To see the satellites:
 1. Click on a planet to select it
 2. Use the zoom controls to zoom in on the planet
-3. Look for small white-outlined dots with name labels orbiting the planet
-4. Satellite names appear directly next to them when zoomed in or when the planet is selected
-5. You can also hover over a satellite to see additional details
+3. Look for the orbital rings around planets with satellites
+4. Each satellite has its name clearly displayed above it
+5. Hover over a satellite to see additional details (radius, orbital period)
+6. Watch the satellites orbit as you run the animation!
 
 ## Technical Details
 
