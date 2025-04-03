@@ -1,8 +1,8 @@
 import { Route, Switch } from 'wouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
-import { Toaster } from './components/ui/toaster';
-import Home from './pages/Home';
+import { CustomToaster } from './components/ui/custom-toaster';
+import HomeSimple from './pages/Home-simple';
 import NotFound from './pages/not-found';
 import { useEffect } from 'react';
 
@@ -22,7 +22,7 @@ function setBrowserConfigForGitHubPages() {
 function Routes() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={HomeSimple} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -35,7 +35,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Routes />
-      <Toaster />
+      <CustomToaster />
     </QueryClientProvider>
   );
 }

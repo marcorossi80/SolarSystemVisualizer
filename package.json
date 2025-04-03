@@ -16,6 +16,8 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@radix-ui/react-toast": "^1.2.6",
+    "@replit/vite-plugin-cartographer": "^0.0.11",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
     "@replit/vite-plugin-shadcn-theme-json": "^0.0.4",
     "@tailwindcss/typography": "^0.5.16",
@@ -25,6 +27,7 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "class-variance-authority": "^0.7.1",
     "drizzle-kit": "^0.30.6",
     "drizzle-orm": "^0.41.0",
     "drizzle-zod": "^0.7.1",
@@ -37,8 +40,11 @@
     "tailwindcss": "^4.0.17",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.19.3",
-    "vite": "^6.2.4",
+    "vite": "^5.0.0",
     "wouter": "^3.6.0",
     "zod": "^3.24.2"
+  },
+  "scripts": {
+    "dev": "node start-dev-server.js"
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { calculatePlanetPositions, CelestialBody } from '@/lib/planetCalculations';
+import { calculatePlanetPositions, CelestialBody, Satellite } from '@/lib/planetCalculations';
 
 interface InfoPanelProps {
   currentDate: Date;
@@ -79,6 +79,10 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ currentDate }) => {
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span><strong>Accurate Orbits:</strong> Planets follow elliptical paths with proper inclination</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-400 mr-2">•</span>
+                  <span><strong>Major Satellites:</strong> Includes the largest moons for each planet</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
@@ -203,6 +207,48 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ currentDate }) => {
                       <p className="text-xs text-amber-300 font-medium">Features distinctive ring system</p>
                     </div>
                   )}
+                  
+                  {/* Satellites section */}
+                  {selectedBody.satellites && selectedBody.satellites.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <p className="text-gray-300 text-sm font-medium mb-2">
+                        {selectedBody.name} has {selectedBody.satellites.length} major {selectedBody.satellites.length === 1 ? 'satellite' : 'satellites'}
+                      </p>
+                      
+                      <div className="space-y-2">
+                        {selectedBody.satellites.map((satellite: Satellite) => (
+                          <div key={satellite.name} className="bg-gray-800 bg-opacity-50 rounded-md p-2">
+                            <div className="flex items-center mb-1">
+                              <div
+                                className="w-3 h-3 rounded-full mr-2"
+                                style={{ backgroundColor: satellite.color }}
+                              ></div>
+                              <h4 className="font-medium text-sm">{satellite.name}</h4>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <p className="text-gray-400">Diameter</p>
+                                <p>{formatNumber(satellite.radius * 2)} km</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400">Orbital Period</p>
+                                <p>{satellite.period.toFixed(2)} days</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400">Semi-major axis</p>
+                                <p>{formatNumber(satellite.semiMajorAxis)} km</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400">Inclination</p>
+                                <p>{satellite.inclination.toFixed(2)}°</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -229,7 +275,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ currentDate }) => {
                         <p className="text-xs text-gray-400">
                           {body.name === 'Sun' 
                             ? 'Star at the center of our solar system' 
-                            : `Planet - ${formatDistance(body.distance)} from Sun`}
+                            : `Planet - ${formatDistance(body.distance)} from Sun${body.satellites ? ` • ${body.satellites.length} ${body.satellites.length === 1 ? 'moon' : 'moons'}` : ''}`}
                         </p>
                       </div>
                     </div>

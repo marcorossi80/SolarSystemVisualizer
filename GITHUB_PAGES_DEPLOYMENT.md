@@ -1,96 +1,146 @@
-# GitHub Pages Deployment Guide
+# Deploying the Solar System Visualizer to GitHub Pages
 
-This document provides comprehensive instructions for deploying the Solar System Visualizer to GitHub Pages.
+This guide provides step-by-step instructions to deploy the Solar System Visualizer as a static website on GitHub Pages, making it accessible from anywhere on the web.
 
 ## Prerequisites
 
-1. A GitHub account
-2. Git installed on your computer
-3. A repository created on GitHub (e.g., `SolarSystemVisualizer`)
+- A GitHub account
+- Git installed on your local machine
+- Basic familiarity with command line operations
 
-## Deployment Options
+## Deployment Steps
 
-There are three ways to deploy this project to GitHub Pages:
+### 1. Prepare your static files
 
-### Option 1: Automated GitHub Actions (Recommended)
+Our deployment script (`deploy-to-github-pages.sh`) handles this automatically. It:
+- Creates a `gh-pages` directory
+- Copies the required HTML and asset files
+- Creates a 404 page for better user experience
+- Adds a `.nojekyll` file to prevent Jekyll processing
 
-1. Push your code to the `main` branch of your GitHub repository
-2. GitHub Actions will automatically build and deploy to the `gh-pages` branch
-3. Go to your repository on GitHub → Settings → Pages
-4. Configure GitHub Pages to deploy from the `gh-pages` branch
-5. Your site will be available at `https://yourusername.github.io/repository-name/`
-
-The GitHub Actions workflow file is already set up at `.github/workflows/deploy.yml`.
-
-### Option 2: Using the Deploy Script
-
-1. Clone your repository to your local machine
-2. Navigate to the project directory
-3. Run the deployment script:
+Run the script to prepare your files:
 
 ```bash
-./deploy-to-github.sh https://github.com/yourusername/repository-name.git
+chmod +x deploy-to-github-pages.sh
+./deploy-to-github-pages.sh
 ```
 
-4. The script will build the project and push it to the `gh-pages` branch
-5. Configure GitHub Pages in your repository settings to deploy from the `gh-pages` branch
+### 2. Create a GitHub Repository
 
-### Option 3: Manual Deployment
+1. Go to [GitHub](https://github.com) and log in
+2. Click the "+" icon in the top right corner and select "New repository"
+3. Name your repository (e.g., "solar-system-visualizer")
+4. Add a description if desired
+5. Choose whether to make it public or private
+6. Click "Create repository"
 
-1. Build the project using the build script:
+### 3. Push to GitHub Pages Branch
+
+The simplest approach is to push the contents of your `gh-pages` directory to a branch called `gh-pages` in your new repository:
 
 ```bash
-./build-for-deploy.sh
-```
-
-2. This creates a `dist` directory with all the files needed for deployment
-3. Push the contents of the `dist` directory to the `gh-pages` branch:
-
-```bash
-cd dist
+cd gh-pages
 git init
 git add .
-git commit -m "Deploy to GitHub Pages"
-git remote add origin https://github.com/yourusername/repository-name.git
+git commit -m "Deploy Solar System Visualizer to GitHub Pages"
+git remote add origin https://github.com/your-username/solar-system-visualizer.git
 git push -f origin main:gh-pages
 ```
 
-4. Configure GitHub Pages in your repository settings to deploy from the `gh-pages` branch
+Replace `your-username` with your actual GitHub username and `solar-system-visualizer` with your repository name.
 
-## Important Files for GitHub Pages
+### 4. Enable GitHub Pages
 
-The project includes these special files for GitHub Pages SPA routing:
+1. Go to your repository on GitHub
+2. Click on "Settings"
+3. Scroll down to the "GitHub Pages" section
+4. Under "Source", select the `gh-pages` branch
+5. Click "Save"
 
-- `404.html`: Handles redirects for client-side routing
-- `index.html`: Contains the SPA router script
-- `.nojekyll`: Prevents GitHub Pages from processing the site with Jekyll
+GitHub will provide you with a URL for your published site (usually `https://your-username.github.io/solar-system-visualizer/`).
 
-## Setting Up a Custom Domain (Optional)
+### 5. Verify Deployment
 
-1. Create a `CNAME` file in the root directory with your domain name (e.g., `solarsystem.yourdomain.com`)
-2. Configure DNS settings with your domain provider:
-   - For a subdomain: Create a CNAME record pointing to `yourusername.github.io`
-   - For an apex domain: Create A records pointing to GitHub Pages IP addresses
-3. Update the GitHub Pages settings in your repository to use your custom domain
+Open the provided URL in your browser to verify that your Solar System Visualizer is running correctly.
+
+## Using a Custom Domain (Optional)
+
+If you have a custom domain that you'd like to use for this project:
+
+1. Add your domain to the CNAME file:
+   ```
+   echo "your-domain.com" > gh-pages/CNAME
+   ```
+
+2. Commit and push this change to the gh-pages branch
+
+3. Configure your domain's DNS settings:
+   - For apex domains (e.g., example.com), create A records pointing to GitHub's IP addresses:
+     ```
+     185.199.108.153
+     185.199.109.153
+     185.199.110.153
+     185.199.111.153
+     ```
+   - For subdomains (e.g., solar.example.com), create a CNAME record pointing to `your-username.github.io`
+
+4. In your repository settings, add your custom domain to the GitHub Pages section
+
+## Updating the Deployment
+
+When you make changes to your visualization:
+
+1. Update the necessary files in the `public` directory
+2. Run the deployment script again:
+   ```bash
+   ./deploy-to-github-pages.sh
+   ```
+3. Push the changes to GitHub:
+   ```bash
+   cd gh-pages
+   git add .
+   git commit -m "Update Solar System Visualizer"
+   git push -f origin main:gh-pages
+   ```
 
 ## Troubleshooting
 
-### Issue: 404 Errors When Navigating
-- Make sure the 404.html file is correctly set up
-- Verify that the SPA router script in index.html is intact
-- Check that GitHub Pages is configured to use the correct branch
+- **Page Not Found (404)**: Make sure your repository name matches the URL path and that GitHub Pages is enabled for the correct branch.
+- **Styling Issues**: If your styles are not loading, check for relative path issues in your HTML files.
+- **CORS Errors**: For security reasons, some browsers block cross-origin requests. Make sure all resources are loaded from the same domain or properly configured for CORS.
+- **Custom Domain Not Working**: DNS changes can take up to 48 hours to propagate. Check your DNS configuration and wait at least 24 hours before troubleshooting further.
 
-### Issue: Assets Not Loading
-- Ensure all asset paths are relative, not absolute
-- Check for any hardcoded URLs that might need updating
+## GitHub Actions Automation (Advanced)
 
-### Issue: Custom Domain Not Working
-- Verify DNS propagation (can take up to 48 hours)
-- Make sure the CNAME file is properly created
-- Check GitHub repository settings to confirm custom domain configuration
+For automated deployments, you can set up a GitHub Actions workflow:
 
-## Further Resources
+1. Create a file at `.github/workflows/deploy.yml`:
 
-- [GitHub Pages Documentation](https://docs.github.com/en/pages)
-- [Custom Domain Setup](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)
-- [SPA GitHub Pages](https://github.com/rafgraph/spa-github-pages) - Credits for the SPA routing technique
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Prepare deployment
+        run: |
+          chmod +x deploy-to-github-pages.sh
+          ./deploy-to-github-pages.sh
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+```
+
+This workflow will automatically deploy your site whenever you push changes to the `main` branch.

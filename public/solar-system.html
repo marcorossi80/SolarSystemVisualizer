@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System Visualizer - As of April 1, 2025</title>
+  <meta name="description" content="An interactive, accurate-scale visualization of our solar system with planet positions as of April 1, 2025." />
+  <style>
+    :root {
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --background: #0d1117;
+      --foreground: #f0f6fc;
+      --primary: #58a6ff;
+      --muted: #8b949e;
+      --card: #161b22;
+      --border: #30363d;
+      --scale: 1;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    
+    header {
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: linear-gradient(to right, #58a6ff, #bc8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(88, 166, 255, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      border-radius: 0.375rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .button:hover {
+      background: rgba(88, 166, 255, 0.2);
+    }
+    
+    .button-icon {
+      margin-right: 0.5rem;
+    }
+    
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 4rem);
+      overflow: hidden;
+    }
+    
+    canvas {
+      display: block;
+      cursor: move;
+    }
+    
+    .info-panel {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 300px;
+      background: rgba(22, 27, 34, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      color: var(--foreground);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+    }
+    
+    .info-panel h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    
+    .info-list {
+      list-style: none;
+    }
+    
+    .info-list li {
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .info-label {
+      color: var(--muted);
+    }
+    
+    .control-panel {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(22, 27, 34, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+    
+    .speed-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    input[type="range"] {
+      width: 100px;
+    }
+    
+    .planet-marker {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .planet-label {
+      position: absolute;
+      background: rgba(22, 27, 34, 0.75);
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      transform: translate(-50%, -150%);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--foreground);
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      max-width: 200px;
+    }
+    
+    .tooltip-visible {
+      opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .info-panel {
+        width: 250px;
+      }
+      
+      .control-panel {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Solar System Visualizer</h1>
+    <div class="controls">
+      <button id="scale-toggle" class="button">
+        <span class="button-icon">⚖️</span>
+        <span id="scale-label">True Scale</span>
+      </button>
+      <button id="reset-view" class="button">
+        <span class="button-icon">🔄</span>
+        Reset View
+      </button>
+    </div>
+  </header>
+  
+  <div class="canvas-container">
+    <canvas id="solar-system"></canvas>
+    
+    <div class="info-panel">
+      <h2>April 1, 2025 <span id="current-time"></span></h2>
+      <div id="planet-info">
+        <p>Click on a planet to see details</p>
+      </div>
+    </div>
+    
+    <div class="control-panel">
+      <button id="toggle-animation" class="button">
+        <span class="button-icon">▶️</span>
+        <span id="animation-label">Play</span>
+      </button>
+      
+      <div class="speed-control">
+        <span>Speed:</span>
+        <input type="range" id="speed-slider" min="0.5" max="10" step="0.5" value="1">
+        <span id="speed-value">1.0x</span>
+      </div>
+      
+      <button id="zoom-in" class="button">
+        <span class="button-icon">🔍+</span>
+      </button>
+      
+      <button id="zoom-out" class="button">
+        <span class="button-icon">🔍-</span>
+      </button>
+    </div>
+  </div>
+  
+  <div id="tooltip" class="tooltip"></div>
+  
+  <script>
+    // Planet data as of April 1, 2025
+    const PLANETS = [
+      {
+        name: "Sun",
+        radius: 696340, // km
+        color: "#FDB813",
+        distance: 0,
+        gradient: true,
+        orbit: {
+          a: 0,
+          e: 0,
+          i: 0,
+          L: 0,
+          lp: 0,
+          o: 0
+        },
+        position: { x: 0, y: 0 }
+      },
+      {
+        name: "Mercury",
+        radius: 2439.7,
+        color: "#8C8C8C",
+        distance: 0.387, // AU
+        orbit: {
+          a: 0.387098,    // semi-major axis (AU)
+          e: 0.205630,    // eccentricity
+          i: 7.00487,     // inclination (degrees)
+          L: 252.25084,   // mean longitude (degrees)
+          lp: 77.45645,   // longitude of perihelion (degrees)
+          o: 48.33167     // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: []
+      },
+      {
+        name: "Venus",
+        radius: 6051.8,
+        color: "#E29421",
+        distance: 0.723, // AU
+        orbit: {
+          a: 0.723332,    // semi-major axis (AU)
+          e: 0.006773,    // eccentricity
+          i: 3.39471,     // inclination (degrees)
+          L: 181.97973,   // mean longitude (degrees)
+          lp: 131.53298,  // longitude of perihelion (degrees)
+          o: 76.68069     // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: []
+      },
+      {
+        name: "Earth",
+        radius: 6371,
+        color: "#4B75B5",
+        distance: 1.0, // AU
+        orbit: {
+          a: 1.000000,    // semi-major axis (AU)
+          e: 0.016709,    // eccentricity
+          i: 0.00005,     // inclination (degrees)
+          L: 100.46435,   // mean longitude (degrees)
+          lp: 102.94719,  // longitude of perihelion (degrees)
+          o: -11.26064    // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: [
+          {
+            name: "Moon",
+            radius: 1737.4,
+            color: "#CFCFCF",
+            semiMajorAxis: 60.3, // Earth radii
+            eccentricity: 0.0549,
+            inclination: 5.145,
+            period: 27.3217,
+            longitudeAtEpoch: 125.1228,
+            position: { x: 0, y: 0 }
+          }
+        ]
+      },
+      {
+        name: "Mars",
+        radius: 3389.5,
+        color: "#C1440E",
+        distance: 1.524, // AU
+        orbit: {
+          a: 1.523679,    // semi-major axis (AU)
+          e: 0.093405,    // eccentricity
+          i: 1.85061,     // inclination (degrees)
+          L: 355.45332,   // mean longitude (degrees)
+          lp: 336.04084,  // longitude of perihelion (degrees)
+          o: 49.57854     // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: [
+          {
+            name: "Phobos",
+            radius: 11.1,
+            color: "#A89078",
+            semiMajorAxis: 9.376, // Mars radii
+            eccentricity: 0.0151,
+            inclination: 1.093,
+            period: 0.3189,
+            longitudeAtEpoch: 157.1159,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Deimos",
+            radius: 6.2,
+            color: "#A89078",
+            semiMajorAxis: 23.463, // Mars radii
+            eccentricity: 0.0002,
+            inclination: 1.791,
+            period: 1.2624,
+            longitudeAtEpoch: 233.4187,
+            position: { x: 0, y: 0 }
+          }
+        ]
+      },
+      {
+        name: "Jupiter",
+        radius: 69911,
+        color: "#C78F65",
+        distance: 5.203, // AU
+        orbit: {
+          a: 5.204267,    // semi-major axis (AU)
+          e: 0.048498,    // eccentricity
+          i: 1.30530,     // inclination (degrees)
+          L: 34.39644,    // mean longitude (degrees)
+          lp: 14.75385,   // longitude of perihelion (degrees)
+          o: 100.55615    // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: [
+          {
+            name: "Io",
+            radius: 1821.6,
+            color: "#CDAD7A",
+            semiMajorAxis: 5.95, // Jupiter radii
+            eccentricity: 0.0041,
+            inclination: 0.05,
+            period: 1.769,
+            longitudeAtEpoch: 187.4632,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Europa",
+            radius: 1560.8,
+            color: "#B7B39E",
+            semiMajorAxis: 9.47, // Jupiter radii
+            eccentricity: 0.0094,
+            inclination: 0.47,
+            period: 3.551,
+            longitudeAtEpoch: 225.7498,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Ganymede",
+            radius: 2634.1,
+            color: "#8B7D77",
+            semiMajorAxis: 15.12, // Jupiter radii
+            eccentricity: 0.0013,
+            inclination: 0.21,
+            period: 7.155,
+            longitudeAtEpoch: 103.8561,
+            position: { x: 0, y: 0 }
+          }
+        ]
+      },
+      {
+        name: "Saturn",
+        radius: 58232,
+        color: "#E2B85D",
+        distance: 9.539, // AU
+        rings: true,
+        orbit: {
+          a: 9.582018,    // semi-major axis (AU)
+          e: 0.055546,    // eccentricity
+          i: 2.48446,     // inclination (degrees)
+          L: 49.95424,    // mean longitude (degrees)
+          lp: 92.43194,   // longitude of perihelion (degrees)
+          o: 113.71504    // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: [
+          {
+            name: "Titan",
+            radius: 2574.7,
+            color: "#FDB64D",
+            semiMajorAxis: 20.27, // Saturn radii
+            eccentricity: 0.0288,
+            inclination: 0.33,
+            period: 15.945,
+            longitudeAtEpoch: 277.6925,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Rhea",
+            radius: 763.8,
+            color: "#D8D8D8",
+            semiMajorAxis: 8.74, // Saturn radii
+            eccentricity: 0.0013,
+            inclination: 0.35,
+            period: 4.518,
+            longitudeAtEpoch: 156.3243,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Iapetus",
+            radius: 734.3,
+            color: "#525252",
+            semiMajorAxis: 59.09, // Saturn radii
+            eccentricity: 0.0286,
+            inclination: 7.52,
+            period: 79.322,
+            longitudeAtEpoch: 312.7869,
+            position: { x: 0, y: 0 }
+          }
+        ]
+      },
+      {
+        name: "Uranus",
+        radius: 25362,
+        color: "#8CE9F7",
+        distance: 19.18, // AU
+        orbit: {
+          a: 19.229412,   // semi-major axis (AU)
+          e: 0.046381,    // eccentricity
+          i: 0.76986,     // inclination (degrees)
+          L: 313.23218,   // mean longitude (degrees)
+          lp: 170.95427,  // longitude of perihelion (degrees)
+          o: 74.01692     // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: [
+          {
+            name: "Titania",
+            radius: 788.9,
+            color: "#B9B9B9",
+            semiMajorAxis: 17.07, // Uranus radii
+            eccentricity: 0.0011,
+            inclination: 0.08,
+            period: 8.706,
+            longitudeAtEpoch: 89.1243,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Oberon",
+            radius: 761.4,
+            color: "#A7A7A7",
+            semiMajorAxis: 22.83, // Uranus radii
+            eccentricity: 0.0014,
+            inclination: 0.07,
+            period: 13.463,
+            longitudeAtEpoch: 175.3214,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Umbriel",
+            radius: 584.7,
+            color: "#706E6D",
+            semiMajorAxis: 10.38, // Uranus radii
+            eccentricity: 0.0039,
+            inclination: 0.13,
+            period: 4.144,
+            longitudeAtEpoch: 256.7869,
+            position: { x: 0, y: 0 }
+          }
+        ]
+      },
+      {
+        name: "Neptune",
+        radius: 24622,
+        color: "#3454DF",
+        distance: 30.07, // AU
+        orbit: {
+          a: 30.103658,   // semi-major axis (AU)
+          e: 0.008835,    // eccentricity
+          i: 1.76917,     // inclination (degrees)
+          L: 304.88003,   // mean longitude (degrees)
+          lp: 44.97135,   // longitude of perihelion (degrees)
+          o: 131.78422    // longitude of ascending node (degrees)
+        },
+        position: { x: 0, y: 0 },
+        satellites: [
+          {
+            name: "Triton",
+            radius: 1353.4,
+            color: "#C4BAB0",
+            semiMajorAxis: 14.33, // Neptune radii
+            eccentricity: 0.0000,
+            inclination: 156.885, // Retrograde orbit
+            period: 5.877,
+            longitudeAtEpoch: 322.5712,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Proteus",
+            radius: 210,
+            color: "#8E8E8E",
+            semiMajorAxis: 4.75, // Neptune radii
+            eccentricity: 0.0005,
+            inclination: 0.04,
+            period: 1.122,
+            longitudeAtEpoch: 147.3214,
+            position: { x: 0, y: 0 }
+          },
+          {
+            name: "Nereid",
+            radius: 170,
+            color: "#B8B8B8",
+            semiMajorAxis: 227.73, // Neptune radii
+            eccentricity: 0.7512,
+            inclination: 7.23,
+            period: 360.13,
+            longitudeAtEpoch: 263.4527,
+            position: { x: 0, y: 0 }
+          }
+        ]
+      }
+    ];
+    
+    // Constants
+    const AU = 149597870.7; // 1 Astronomical Unit in km
+    const EARTH_RADIUS = 6371; // km
+    
+    // Canvas setup
+    const canvas = document.getElementById('solar-system');
+    const ctx = canvas.getContext('2d');
+    
+    // UI elements
+    const scaleToggle = document.getElementById('scale-toggle');
+    const scaleLabel = document.getElementById('scale-label');
+    const resetView = document.getElementById('reset-view');
+    const toggleAnimation = document.getElementById('toggle-animation');
+    const animationLabel = document.getElementById('animation-label');
+    const speedSlider = document.getElementById('speed-slider');
+    const speedValue = document.getElementById('speed-value');
+    const zoomIn = document.getElementById('zoom-in');
+    const zoomOut = document.getElementById('zoom-out');
+    const planetInfo = document.getElementById('planet-info');
+    const currentTime = document.getElementById('current-time');
+    const tooltip = document.getElementById('tooltip');
+    
+    // State
+    let isTrueScale = false;
+    let scale = 50; // Initial scale factor
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let selectedPlanet = null;
+    let isAnimating = false;
+    let animationSpeed = 1.0; // Default animation speed
+    let animationRequest;
+    let currentDate = new Date(2025, 3, 1); // April 1, 2025
+    let mouseX = 0;
+    let mouseY = 0;
+    
+    // Format date to display
+    function formatDate(date) {
+      return date.toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+    
+    // Update current time display
+    function updateTimeDisplay() {
+      currentTime.textContent = formatDate(currentDate);
+    }
+    
+    // Convert degrees to radians
+    function toRadians(degrees) {
+      return degrees * Math.PI / 180;
+    }
+    
+    // Calculate days since J2000 (January 1, 2000, 12:00 UTC)
+    function getDaysSinceJ2000(date) {
+      const j2000 = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
+      return (date - j2000) / (1000 * 60 * 60 * 24);
+    }
+    
+    // Calculate planet positions
+    function calculatePositions(date) {
+      const t = getDaysSinceJ2000(date) / 36525; // Convert to Julian centuries
+      
+      PLANETS.forEach(planet => {
+        if (planet.name === "Sun") {
+          planet.position = { x: 0, y: 0 };
+          return;
+        }
+        
+        const { a, e, i, L, lp, o } = planet.orbit;
+        
+        // Calculate mean anomaly
+        const M = (L - lp) % 360;
+        
+        // Solve Kepler's equation iteratively to get eccentric anomaly
+        let E = M;
+        for (let j = 0; j < 10; j++) {
+          E = M + e * Math.sin(toRadians(E)) * (180 / Math.PI);
+        }
+        
+        // Calculate true anomaly
+        const v = 2 * Math.atan2(
+          Math.sqrt(1 + e) * Math.sin(toRadians(E / 2)),
+          Math.sqrt(1 - e) * Math.cos(toRadians(E / 2))
+        ) * (180 / Math.PI);
+        
+        // Calculate distance from sun
+        const r = a * (1 - e * Math.cos(toRadians(E)));
+        
+        // Calculate position in orbital plane
+        const xp = r * Math.cos(toRadians(v + lp - o));
+        const yp = r * Math.sin(toRadians(v + lp - o));
+        
+        // Adjust for inclination
+        const x = xp;
+        const y = yp * Math.cos(toRadians(i));
+        
+        planet.position = { x, y };
+        planet.AU = r; // Store distance in AU
+        
+        // Calculate satellite positions
+        if (planet.satellites) {
+          planet.satellites.forEach(satellite => {
+            const daysSinceEpoch = getDaysSinceJ2000(date);
+            const orbitalPeriod = satellite.period; // in days
+            const orbitalProgress = (daysSinceEpoch % orbitalPeriod) / orbitalPeriod;
+            const angle = (orbitalProgress * 360 + satellite.longitudeAtEpoch) % 360;
+            
+            // Account for eccentricity
+            const r = satellite.semiMajorAxis * (1 - satellite.eccentricity * Math.cos(toRadians(angle)));
+            
+            // Convert to cartesian coordinates (adjusting for inclination)
+            let satX = r * Math.cos(toRadians(angle));
+            let satY = r * Math.sin(toRadians(angle)) * Math.cos(toRadians(satellite.inclination));
+            
+            // Scale satellite distance by planet radius
+            satX *= planet.radius / AU;
+            satY *= planet.radius / AU;
+            
+            // Set position relative to planet center
+            satellite.position = { x: satX, y: satY };
+          });
+        }
+      });
+    }
+    
+    // Resize canvas
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      draw();
+    }
+    
+    // Calculate the appropriate scale for planets
+    function getPlanetScale() {
+      // For true scale, use the actual scales
+      if (isTrueScale) {
+        return planet => planet.radius / (AU * 2000); // Divide AU by a large factor to show planets
+      }
+      
+      // For enhanced scale, use a logarithmic scale to make small planets visible
+      return planet => {
+        if (planet.name === "Sun") {
+          return 0.05;
+        }
+        return 0.009 + 0.006 * Math.log10(planet.radius / EARTH_RADIUS);
+      };
+    }
+    
+    // Convert AU to screen coordinates
+    function auToScreen(au, axis) {
+      const center = axis === 'x' ? canvas.width / 2 : canvas.height / 2;
+      return center + (au * scale) + (axis === 'x' ? panX : panY);
+    }
+    
+    // Check if a point is inside a circle
+    function isPointInCircle(x, y, centerX, centerY, radius) {
+      const dx = x - centerX;
+      const dy = y - centerY;
+      return dx * dx + dy * dy <= radius * radius;
+    }
+    
+    // Draw a planet
+    function drawPlanet(planet, planetScale) {
+      const x = auToScreen(planet.position.x, 'x');
+      const y = auToScreen(planet.position.y, 'y');
+      
+      // Skip if outside viewport with some margin
+      if (x < -100 || x > canvas.width + 100 || y < -100 || y > canvas.height + 100) {
+        return;
+      }
+      
+      const radius = planet.radius * planetScale(planet) * scale;
+      
+      // Draw orbit (except for Sun)
+      if (planet.name !== "Sun") {
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        
+        // For elliptical orbit, need to draw point by point
+        for (let i = 0; i <= 360; i += 5) {
+          const { a, e } = planet.orbit;
+          
+          // Calculate position at each angle
+          const angle = toRadians(i);
+          const r = a * (1 - e * e) / (1 + e * Math.cos(angle));
+          const orbitX = r * Math.cos(angle);
+          const orbitY = r * Math.sin(angle);
+          
+          const screenX = auToScreen(orbitX, 'x');
+          const screenY = auToScreen(orbitY, 'y');
+          
+          if (i === 0) {
+            ctx.moveTo(screenX, screenY);
+          } else {
+            ctx.lineTo(screenX, screenY);
+          }
+        }
+        
+        ctx.closePath();
+        ctx.stroke();
+      }
+      
+      // Saturn's rings
+      if (planet.rings) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#A49966';
+        ctx.lineWidth = radius * 0.1;
+        ctx.ellipse(x, y, radius * 2, radius * 0.5, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.strokeStyle = '#D0C78E';
+        ctx.lineWidth = radius * 0.1;
+        ctx.ellipse(x, y, radius * 1.8, radius * 0.45, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+      
+      // Draw planet
+      ctx.beginPath();
+      
+      if (planet.gradient) {
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, planet.color);
+        gradient.addColorStop(1, shadeColor(planet.color, -20));
+        ctx.fillStyle = gradient;
+      } else {
+        ctx.fillStyle = planet.color;
+      }
+      
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Highlight selected planet
+      if (selectedPlanet && selectedPlanet.name === planet.name) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#58a6ff';
+        ctx.lineWidth = 2;
+        ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      
+      // Draw satellites
+      if (planet.satellites && planet.name !== "Sun") {
+        planet.satellites.forEach(satellite => {
+          const satX = x + satellite.position.x * scale;
+          const satY = y + satellite.position.y * scale;
+          
+          // Draw satellite orbit
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+          ctx.lineWidth = 0.5;
+          
+          // Satellite orbit is an ellipse
+          const orbitRadius = satellite.semiMajorAxis * planet.radius / AU * scale;
+          
+          // Make sure we don't get negative radius due to cos of large inclination (like Triton's)
+          const heightRadius = orbitRadius * Math.abs(Math.cos(toRadians(satellite.inclination)));
+          ctx.ellipse(
+            x, 
+            y, 
+            orbitRadius, 
+            heightRadius, 
+            0, 
+            0, 
+            2 * Math.PI
+          );
+          
+          ctx.stroke();
+          
+          // Draw the satellite
+          const satRadius = Math.max(2, satellite.radius * planetScale(planet) * scale * 10);
+          
+          ctx.beginPath();
+          ctx.fillStyle = satellite.color;
+          ctx.arc(satX, satY, satRadius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      
+      // Planet name label
+      if (radius > 2 || planet.name === "Sun") {
+        const labelX = x;
+        const labelY = y - radius - 15;
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = '12px var(--font-sans)';
+        ctx.textAlign = 'center';
+        ctx.fillText(planet.name, labelX, labelY);
+      }
+    }
+    
+    // Shade a color by percentage
+    function shadeColor(color, percent) {
+      let R = parseInt(color.substring(1, 3), 16);
+      let G = parseInt(color.substring(3, 5), 16);
+      let B = parseInt(color.substring(5, 7), 16);
+      
+      R = Math.max(0, Math.min(255, R + percent));
+      G = Math.max(0, Math.min(255, G + percent));
+      B = Math.max(0, Math.min(255, B + percent));
+      
+      const RR = ((R.toString(16).length === 1) ? "0" + R.toString(16) : R.toString(16));
+      const GG = ((G.toString(16).length === 1) ? "0" + G.toString(16) : G.toString(16));
+      const BB = ((B.toString(16).length === 1) ? "0" + B.toString(16) : B.toString(16));
+      
+      return "#" + RR + GG + BB;
+    }
+    
+    // Draw the scene
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Background stars
+      for (let i = 0; i < 500; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const radius = Math.random() * 1.5;
+        const opacity = Math.random() * 0.8 + 0.2;
+        
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      const planetScale = getPlanetScale();
+      
+      // Draw all planets
+      PLANETS.forEach(planet => {
+        drawPlanet(planet, planetScale);
+      });
+    }
+    
+    // Update planet info panel
+    function updatePlanetInfo(planet) {
+      if (!planet) {
+        planetInfo.innerHTML = '<p>Click on a planet to see details</p>';
+        return;
+      }
+      
+      let html = `
+        <h3>${planet.name}</h3>
+        <ul class="info-list">
+          <li>
+            <span class="info-label">Radius:</span>
+            <span>${(planet.radius).toLocaleString()} km</span>
+          </li>
+          ${planet.name !== "Sun" ? `
+            <li>
+              <span class="info-label">Distance from Sun:</span>
+              <span>${(planet.AU).toFixed(3)} AU</span>
+            </li>
+            <li>
+              <span class="info-label">Orbital Period:</span>
+              <span>${calculateOrbitalPeriod(planet.orbit.a).toFixed(2)} years</span>
+            </li>` : ''}
+      `;
+      
+      // Add satellite info if any
+      if (planet.satellites && planet.satellites.length > 0) {
+        html += `
+          <li>
+            <span class="info-label">Satellites:</span>
+            <span>${planet.satellites.length}</span>
+          </li>
+          <li>
+            <div class="info-label">Major moons:</div>
+            <div>${planet.satellites.map(s => s.name).join(', ')}</div>
+          </li>
+        `;
+      }
+      
+      html += '</ul>';
+      planetInfo.innerHTML = html;
+    }
+    
+    // Calculate orbital period from semi-major axis (in Earth years)
+    function calculateOrbitalPeriod(semiMajorAxis) {
+      // Kepler's Third Law: P^2 = a^3 (where P is in Earth years and a is in AU)
+      return Math.sqrt(Math.pow(semiMajorAxis, 3));
+    }
+    
+    // Animation loop
+    function animate() {
+      // Advance date based on animation speed
+      if (isAnimating) {
+        const newDate = new Date(currentDate);
+        newDate.setHours(newDate.getHours() + 12 * animationSpeed);
+        currentDate = newDate;
+        updateTimeDisplay();
+      }
+      
+      calculatePositions(currentDate);
+      draw();
+      animationRequest = requestAnimationFrame(animate);
+    }
+    
+    // Start the animation
+    function startAnimation() {
+      if (animationRequest) {
+        cancelAnimationFrame(animationRequest);
+      }
+      calculatePositions(currentDate);
+      updateTimeDisplay();
+      animationRequest = requestAnimationFrame(animate);
+    }
+    
+    // Event listeners
+    function setupEventListeners() {
+      // Window resize
+      window.addEventListener('resize', resizeCanvas);
+      
+      // Mouse down for dragging
+      canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        canvas.style.cursor = 'grabbing';
+      });
+      
+      // Mouse move
+      canvas.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // Update tooltip position and check for hover
+        tooltip.style.left = `${e.clientX + 15}px`;
+        tooltip.style.top = `${e.clientY + 15}px`;
+        
+        const planetScale = getPlanetScale();
+        let hoveredPlanet = null;
+        
+        // Check if mouse is over any planet
+        for (const planet of PLANETS) {
+          const x = auToScreen(planet.position.x, 'x');
+          const y = auToScreen(planet.position.y, 'y');
+          const radius = planet.radius * planetScale(planet) * scale;
+          
+          if (isPointInCircle(e.clientX, e.clientY, x, y, radius)) {
+            hoveredPlanet = planet;
+            break;
+          }
+          
+          // Check satellites
+          if (planet.satellites) {
+            for (const satellite of planet.satellites) {
+              const satX = x + satellite.position.x * scale;
+              const satY = y + satellite.position.y * scale;
+              const satRadius = Math.max(2, satellite.radius * planetScale(planet) * scale * 10);
+              
+              if (isPointInCircle(e.clientX, e.clientY, satX, satY, satRadius)) {
+                tooltip.innerHTML = `${satellite.name}<br>Moon of ${planet.name}<br>Radius: ${satellite.radius.toLocaleString()} km`;
+                tooltip.classList.add('tooltip-visible');
+                return;
+              }
+            }
+          }
+        }
+        
+        if (hoveredPlanet) {
+          tooltip.innerHTML = hoveredPlanet.name;
+          tooltip.classList.add('tooltip-visible');
+        } else {
+          tooltip.classList.remove('tooltip-visible');
+        }
+        
+        // Handle dragging
+        if (isDragging) {
+          const deltaX = e.clientX - lastX;
+          const deltaY = e.clientY - lastY;
+          
+          panX += deltaX;
+          panY += deltaY;
+          
+          lastX = e.clientX;
+          lastY = e.clientY;
+          
+          draw();
+        }
+      });
+      
+      // Mouse up to end dragging
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+        canvas.style.cursor = 'move';
+      });
+      
+      // Mouse leave
+      canvas.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('tooltip-visible');
+      });
+      
+      // Click on canvas to select planet
+      canvas.addEventListener('click', (e) => {
+        const planetScale = getPlanetScale();
+        let clicked = false;
+        
+        for (const planet of PLANETS) {
+          const x = auToScreen(planet.position.x, 'x');
+          const y = auToScreen(planet.position.y, 'y');
+          const radius = planet.radius * planetScale(planet) * scale;
+          
+          if (isPointInCircle(e.clientX, e.clientY, x, y, radius)) {
+            selectedPlanet = planet;
+            updatePlanetInfo(planet);
+            clicked = true;
+            break;
+          }
+        }
+        
+        if (!clicked) {
+          selectedPlanet = null;
+          updatePlanetInfo(null);
+        }
+        
+        draw();
+      });
+      
+      // Scale toggle
+      scaleToggle.addEventListener('click', () => {
+        isTrueScale = !isTrueScale;
+        scaleLabel.textContent = isTrueScale ? 'Enhanced Scale' : 'True Scale';
+        
+        // Adjust scale for better viewing
+        if (isTrueScale) {
+          scale = 1000; // Much larger scale for true size viewing
+        } else {
+          scale = 50; // Default enhanced scale
+        }
+        
+        draw();
+      });
+      
+      // Reset view
+      resetView.addEventListener('click', () => {
+        panX = 0;
+        panY = 0;
+        scale = isTrueScale ? 1000 : 50;
+        selectedPlanet = null;
+        updatePlanetInfo(null);
+        draw();
+      });
+      
+      // Toggle animation
+      toggleAnimation.addEventListener('click', () => {
+        isAnimating = !isAnimating;
+        animationLabel.textContent = isAnimating ? 'Pause' : 'Play';
+        toggleAnimation.querySelector('.button-icon').textContent = isAnimating ? '⏸️' : '▶️';
+      });
+      
+      // Speed control
+      speedSlider.addEventListener('input', () => {
+        animationSpeed = parseFloat(speedSlider.value);
+        speedValue.textContent = `${animationSpeed.toFixed(1)}x`;
+      });
+      
+      // Zoom controls
+      zoomIn.addEventListener('click', () => {
+        scale *= 1.2;
+        draw();
+      });
+      
+      zoomOut.addEventListener('click', () => {
+        scale /= 1.2;
+        draw();
+      });
+      
+      // Wheel zoom
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+        
+        // Get mouse position relative to canvas
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        // Get mouse position in world space before zooming
+        const worldX = (mouseX - canvas.width / 2 - panX) / scale;
+        const worldY = (mouseY - canvas.height / 2 - panY) / scale;
+        
+        // Apply zoom
+        scale *= zoomFactor;
+        
+        // Get new screen position and adjust pan to zoom to cursor
+        const newScreenX = worldX * scale + canvas.width / 2;
+        const newScreenY = worldY * scale + canvas.height / 2;
+        
+        panX += mouseX - newScreenX;
+        panY += mouseY - newScreenY;
+        
+        draw();
+      });
+      
+      // Keyboard navigation
+      window.addEventListener('keydown', (e) => {
+        switch (e.key) {
+          case '+':
+            scale *= 1.2;
+            break;
+          case '-':
+            scale /= 1.2;
+            break;
+          case 'ArrowUp':
+            panY += 20;
+            break;
+          case 'ArrowDown':
+            panY -= 20;
+            break;
+          case 'ArrowLeft':
+            panX += 20;
+            break;
+          case 'ArrowRight':
+            panX -= 20;
+            break;
+          case 'Home':
+            panX = 0;
+            panY = 0;
+            break;
+          case ' ':
+            isAnimating = !isAnimating;
+            animationLabel.textContent = isAnimating ? 'Pause' : 'Play';
+            toggleAnimation.querySelector('.button-icon').textContent = isAnimating ? '⏸️' : '▶️';
+            break;
+          default:
+            return;
+        }
+        
+        e.preventDefault();
+        draw();
+      });
+    }
+    
+    // Initialize
+    function init() {
+      resizeCanvas();
+      calculatePositions(currentDate);
+      updateTimeDisplay();
+      updatePlanetInfo(null);
+      setupEventListeners();
+      startAnimation();
+    }
+    
+    // Start the visualization
+    init();
+  </script>
+</body>
+</html>

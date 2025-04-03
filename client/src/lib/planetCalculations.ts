@@ -2,8 +2,8 @@
  * Planet Calculations Library
  * 
  * This library uses astronomical formulas to calculate the positions of planets
- * in our solar system based on a given date. The calculations are based on
- * algorithms from Jean Meeus' "Astronomical Algorithms" and NASA data.
+ * and their satellites in our solar system based on a given date. The calculations 
+ * are based on algorithms from Jean Meeus' "Astronomical Algorithms" and NASA data.
  * 
  * The positions are calculated using Keplerian elements, which are updated with
  * time-dependent terms to account for orbital precession and perturbations.
@@ -23,6 +23,19 @@ interface OrbitalElements {
   o: number;  // longitude of ascending node (degrees)
 }
 
+export interface Satellite {
+  name: string;
+  radius: number; // km
+  color: string;
+  // For satellites, the semi-major axis is in planet radii, not AU
+  semiMajorAxis: number; // in planet radii or km (depending on parent planet)
+  eccentricity: number;
+  inclination: number; // degrees
+  period: number; // orbital period in days
+  longitudeAtEpoch: number; // degrees
+  position: Position;
+}
+
 export interface CelestialBody {
   name: string;
   radius: number; // km
@@ -33,6 +46,7 @@ export interface CelestialBody {
   position: Position;
   gradient?: boolean;
   rings?: boolean;
+  satellites?: Satellite[];
 }
 
 // Days since J2000 epoch
@@ -86,6 +100,48 @@ function calculatePosition(planet: OrbitalElements, date: Date): Position {
   const lp = toRadians(planet.lp);
   const x = x_orbital * Math.cos(lp) - y_orbital * Math.sin(lp);
   const y = x_orbital * Math.sin(lp) + y_orbital * Math.cos(lp);
+  
+  return { x, y };
+}
+
+/**
+ * Calculate the position of a satellite orbiting a planet
+ * @param satellite Satellite data
+ * @param date Target date for calculation
+ * @returns {Position} x, y coordinates relative to the planet
+ */
+function calculateSatellitePosition(satellite: Satellite, date: Date): Position {
+  // Calculate days since January 1, 2000 (J2000 epoch)
+  const daysSinceJ2000 = getDaysSinceJ2000(date);
+  
+  // Calculate current angle based on orbital period and starting longitude
+  // 360 degrees / period in days = degrees per day
+  const degreesPerDay = 360 / satellite.period;
+  const currentAngle = (satellite.longitudeAtEpoch + (degreesPerDay * daysSinceJ2000)) % 360;
+  const angleRad = toRadians(currentAngle);
+  
+  // Calculate position in orbital plane
+  const a = satellite.semiMajorAxis;
+  const e = satellite.eccentricity;
+  
+  // Simplified eccentric anomaly calculation for satellites
+  let M = angleRad;
+  let E = M;
+  
+  // Solve Kepler's equation for satellites (simplified)
+  for (let iter = 0; iter < 5; iter++) {
+    E = M + e * Math.sin(E);
+  }
+  
+  // Calculate distance from planet center
+  const r = a * (1 - e * Math.cos(E));
+  
+  // Calculate satellite position relative to planet
+  // Here we're simplifying by assuming the inclination creates a simple
+  // projection effect on the y-coordinate
+  const inclinationFactor = Math.cos(toRadians(satellite.inclination));
+  const x = r * Math.cos(angleRad);
+  const y = r * Math.sin(angleRad) * inclinationFactor;
   
   return { x, y };
 }
@@ -252,17 +308,233 @@ export function calculatePlanetPositions(date: Date): CelestialBody[] {
   // This section would include more sophisticated time-dependent corrections
   // for accurate positioning. These are simplified adjustments.
   
-  // Calculate position for each planet
+  // Add satellite data for each planet
+  // Data from NASA/JPL and various astronomical sources
+  
+  // Earth's satellite - The Moon
+  planets[3].satellites = [
+    {
+      name: "Moon",
+      radius: 1737.4, // km
+      color: "#CCCCCC",
+      semiMajorAxis: 384400, // km
+      eccentricity: 0.0549,
+      inclination: 5.145, // degrees to Earth's equator
+      period: 27.3217, // days
+      longitudeAtEpoch: 125.1228, // deg at J2000
+      position: { x: 0, y: 0 }
+    }
+  ];
+  
+  // Mars satellites - Phobos and Deimos
+  planets[4].satellites = [
+    {
+      name: "Phobos",
+      radius: 11.1, // km
+      color: "#A79C8E",
+      semiMajorAxis: 9376, // km
+      eccentricity: 0.0151,
+      inclination: 1.093, // degrees
+      period: 0.31891, // days
+      longitudeAtEpoch: 35, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Deimos",
+      radius: 6.2, // km
+      color: "#9E9C99",
+      semiMajorAxis: 23463.2, // km
+      eccentricity: 0.00033,
+      inclination: 0.93, // degrees
+      period: 1.26244, // days
+      longitudeAtEpoch: 150, // approximation
+      position: { x: 0, y: 0 }
+    }
+  ];
+  
+  // Jupiter's major satellites - The Galilean Moons
+  planets[5].satellites = [
+    {
+      name: "Io",
+      radius: 1821.6, // km
+      color: "#F7CD60",
+      semiMajorAxis: 421700, // km
+      eccentricity: 0.0041,
+      inclination: 0.05, // degrees
+      period: 1.769, // days
+      longitudeAtEpoch: 43.2, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Europa",
+      radius: 1560.8, // km
+      color: "#BCA37F",
+      semiMajorAxis: 671034, // km
+      eccentricity: 0.009,
+      inclination: 0.47, // degrees
+      period: 3.551, // days
+      longitudeAtEpoch: 219.1, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Ganymede",
+      radius: 2634.1, // km
+      color: "#9BA6BE",
+      semiMajorAxis: 1070412, // km
+      eccentricity: 0.0013,
+      inclination: 0.21, // degrees
+      period: 7.155, // days
+      longitudeAtEpoch: 63.4, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Callisto",
+      radius: 2410.3, // km
+      color: "#5A4E4D",
+      semiMajorAxis: 1882709, // km
+      eccentricity: 0.0074,
+      inclination: 0.51, // degrees
+      period: 16.689, // days
+      longitudeAtEpoch: 308.6, // approximation
+      position: { x: 0, y: 0 }
+    }
+  ];
+  
+  // Saturn's major satellites
+  planets[6].satellites = [
+    {
+      name: "Titan",
+      radius: 2574.7, // km
+      color: "#E5A544",
+      semiMajorAxis: 1221870, // km
+      eccentricity: 0.0288,
+      inclination: 0.34854, // degrees
+      period: 15.945, // days
+      longitudeAtEpoch: 287, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Rhea",
+      radius: 763.8, // km
+      color: "#BEBFC1",
+      semiMajorAxis: 527108, // km
+      eccentricity: 0.001,
+      inclination: 0.35, // degrees
+      period: 4.518, // days
+      longitudeAtEpoch: 166, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Iapetus",
+      radius: 734.5, // km
+      color: "#9D9D9D",
+      semiMajorAxis: 3560820, // km
+      eccentricity: 0.0293,
+      inclination: 8.13, // degrees
+      period: 79.322, // days
+      longitudeAtEpoch: 215, // approximation
+      position: { x: 0, y: 0 }
+    }
+  ];
+  
+  // Uranus's major satellites
+  planets[7].satellites = [
+    {
+      name: "Titania",
+      radius: 788.4, // km
+      color: "#C2C5C7",
+      semiMajorAxis: 435910, // km
+      eccentricity: 0.0011,
+      inclination: 0.340, // degrees
+      period: 8.706, // days
+      longitudeAtEpoch: 130, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Oberon",
+      radius: 761.4, // km
+      color: "#B5B5B7",
+      semiMajorAxis: 583520, // km
+      eccentricity: 0.0014,
+      inclination: 0.058, // degrees
+      period: 13.46, // days
+      longitudeAtEpoch: 78, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Ariel",
+      radius: 578.9, // km
+      color: "#C1C3C4",
+      semiMajorAxis: 191020, // km
+      eccentricity: 0.0012,
+      inclination: 0.260, // degrees
+      period: 2.520, // days
+      longitudeAtEpoch: 54, // approximation
+      position: { x: 0, y: 0 }
+    }
+  ];
+  
+  // Neptune's major satellites
+  planets[8].satellites = [
+    {
+      name: "Triton",
+      radius: 1353.4, // km
+      color: "#CD9F83",
+      semiMajorAxis: 354759, // km
+      eccentricity: 0.000016,
+      inclination: 156.885, // retrograde orbit
+      period: 5.877, // days
+      longitudeAtEpoch: 220, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Proteus",
+      radius: 210, // km
+      color: "#767676",
+      semiMajorAxis: 117647, // km
+      eccentricity: 0.00053,
+      inclination: 0.524, // degrees
+      period: 1.122, // days
+      longitudeAtEpoch: 310, // approximation
+      position: { x: 0, y: 0 }
+    },
+    {
+      name: "Nereid",
+      radius: 170, // km
+      color: "#9A9A9A",
+      semiMajorAxis: 5513818, // km (highly elliptical orbit)
+      eccentricity: 0.7507,
+      inclination: 7.090, // degrees
+      period: 360.13, // days
+      longitudeAtEpoch: 45, // approximation
+      position: { x: 0, y: 0 }
+    }
+  ];
+  
+  // Calculate position for each planet and its satellites
   const planetsWithPositions = planets.map(planet => {
     if (planet.name === "Sun") {
       return planet; // Sun is at the center
     }
     
     const position = calculatePosition(planet.orbit, date);
-    return {
+    let updatedPlanet = {
       ...planet,
       position
     };
+    
+    // Calculate satellite positions if any
+    if (updatedPlanet.satellites && updatedPlanet.satellites.length > 0) {
+      updatedPlanet.satellites = updatedPlanet.satellites.map(satellite => {
+        const satellitePosition = calculateSatellitePosition(satellite, date);
+        return {
+          ...satellite,
+          position: satellitePosition
+        };
+      });
+    }
+    
+    return updatedPlanet;
   });
   
   return planetsWithPositions;

@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { calculatePlanetPositions } from '@/lib/planetCalculations';
 
+// Helper function to convert degrees to radians
+const toRadians = (degrees: number): number => {
+  return degrees * Math.PI / 180;
+};
+
 interface SolarSystemProps {
   scale: number;
   panX: number;
@@ -67,7 +72,7 @@ const SolarSystem: React.FC<SolarSystemProps> = ({
       context.stroke();
     }
     
-    // Draw planets
+    // Draw planets and satellites
     for (let i = 0; i < celestialBodies.length; i++) {
       const body = celestialBodies[i];
       
@@ -228,6 +233,91 @@ const SolarSystem: React.FC<SolarSystemProps> = ({
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.fillText(body.name, x, labelY + 9);
+      
+      // Draw satellites if any
+      if (body.satellites && body.satellites.length > 0 && body.name !== 'Sun') {
+        // Draw satellite orbits
+        context.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        context.lineWidth = 0.5;
+        
+        for (const satellite of body.satellites) {
+          // Calculate the satellite orbit size in pixels
+          // We need to scale the satellite distances which are in km
+          let orbitSize;
+          if (isTrueScale) {
+            // In true scale mode, use the actual scale relative to the AU value
+            orbitSize = (satellite.semiMajorAxis / body.AU) * scaleFactor;
+          } else {
+            // In enhanced mode, use a logarithmic scale to make satellites visible
+            // Ensuring they're always visible but maintain relative distances
+            const basePlanetSize = radius;
+            const relativeDistance = satellite.semiMajorAxis / (body.radius * 20);
+            orbitSize = basePlanetSize * (1 + Math.log(1 + relativeDistance) * 0.5);
+          }
+          
+          // Draw satellite orbit
+          context.beginPath();
+          context.ellipse(
+            x, 
+            y, 
+            orbitSize,
+            orbitSize * Math.cos(toRadians(satellite.inclination)),
+            satellite.longitudeAtEpoch * Math.PI / 180,
+            0,
+            2 * Math.PI
+          );
+          context.stroke();
+          
+          // Calculate satellite position relative to its planet
+          // First get the position from the satellite's orbital data
+          const satX = x + satellite.position.x * orbitSize / satellite.semiMajorAxis;
+          const satY = y + satellite.position.y * orbitSize / satellite.semiMajorAxis;
+          
+          // Calculate satellite size
+          let satelliteRadius;
+          if (isTrueScale) {
+            satelliteRadius = Math.max(satellite.radius * scaleFactor, 1);
+          } else {
+            // Make satellites visible with size relative to their planet
+            const relativeSizeRatio = satellite.radius / body.radius;
+            satelliteRadius = Math.max(radius * relativeSizeRatio * 2, 2);
+          }
+          
+          // Draw the satellite
+          context.fillStyle = satellite.color;
+          context.beginPath();
+          context.arc(satX, satY, satelliteRadius, 0, 2 * Math.PI);
+          context.fill();
+          
+          // Add a simple highlight for 3D effect
+          context.save();
+          context.fillStyle = 'rgba(255, 255, 255, 0.2)';
+          context.beginPath();
+          context.arc(
+            satX - satelliteRadius * 0.3,
+            satY - satelliteRadius * 0.3,
+            satelliteRadius * 0.5,
+            0,
+            2 * Math.PI
+          );
+          context.fill();
+          context.restore();
+          
+          // Show satellite name on hover or if it's large enough
+          if (satelliteRadius > 3) {
+            // Draw a smaller satellite label
+            context.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            const satLabelWidth = context.measureText(satellite.name).width + 6;
+            const satLabelY = satY + satelliteRadius + 6;
+            
+            context.fillRect(satX - satLabelWidth / 2, satLabelY, satLabelWidth, 14);
+            
+            context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            context.font = '10px "Helvetica", sans-serif';
+            context.fillText(satellite.name, satX, satLabelY + 7);
+          }
+        }
+      }
     }
   };
   

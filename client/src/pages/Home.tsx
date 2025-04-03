@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { calculatePlanetPositions, CelestialBody } from '../lib/planetCalculations';
+import { calculatePlanetPositions, CelestialBody, Satellite } from '../lib/planetCalculations';
 import { 
   ZoomIn, 
   ZoomOut, 
@@ -8,8 +8,10 @@ import {
   Play, 
   Pause, 
   Info, 
-  X 
+  X,
+  Moon
 } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 const Home = () => {
   // State for date and animation
@@ -25,6 +27,8 @@ const Home = () => {
   // State for UI elements
   const [showInfo, setShowInfo] = useState<boolean>(true);
   const [isTrueScale, setIsTrueScale] = useState<boolean>(false);
+  const [showSatellites, setShowSatellites] = useState<boolean>(true);
+  const [selectedPlanet, setSelectedPlanet] = useState<CelestialBody | null>(null);
   
   // Refs for animation and interaction
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -144,6 +148,16 @@ const Home = () => {
     setIsAnimating(prev => !prev);
   }, []);
   
+  // Handle planet selection for detailed view
+  const handlePlanetClick = useCallback((planet: CelestialBody) => {
+    setSelectedPlanet(planet);
+  }, []);
+  
+  // Handle satellite toggle
+  const handleToggleSatellites = useCallback(() => {
+    setShowSatellites(prev => !prev);
+  }, []);
+  
   // Render the planets
   const renderPlanets = () => {
     return planets.map((planet, index) => {
@@ -186,6 +200,73 @@ const Home = () => {
         return null;
       };
       
+      // Render satellites if planet has them and they should be shown
+      const renderSatellites = () => {
+        if (planet.satellites && planet.satellites.length > 0 && showSatellites && planet.name !== 'Sun') {
+          return planet.satellites.map(satellite => {
+            // Calculate satellite size - use enhanced scale to make them visible
+            let satSize = isTrueScale 
+              ? (satellite.radius * 2) / planet.AU * scale 
+              : Math.max(3, Math.log(satellite.radius) * scale / 40);
+            
+            // Calculate satellite position relative to planet
+            const satX = x + satellite.position.x * scale / 10; // Scale satellite orbit for visibility
+            const satY = y + satellite.position.y * scale / 10;
+            
+            // Determine orbit line for satellite
+            const satOrbitRadius = Math.sqrt(
+              Math.pow(satellite.position.x, 2) + Math.pow(satellite.position.y, 2)
+            ) * scale / 10;
+            
+            return (
+              <div key={`${planet.name}-${satellite.name}`}>
+                {/* Satellite orbit */}
+                <div
+                  className="orbit satellite-orbit"
+                  style={{
+                    left: x,
+                    top: y,
+                    width: satOrbitRadius * 2,
+                    height: satOrbitRadius * 2,
+                    opacity: 0.15
+                  }}
+                />
+                
+                {/* Satellite body */}
+                <div
+                  className="planet satellite"
+                  style={{
+                    left: satX,
+                    top: satY,
+                    width: `${satSize}px`,
+                    height: `${satSize}px`,
+                    backgroundColor: satellite.color,
+                    boxShadow: `0 0 ${satSize / 3}px rgba(255, 255, 255, 0.7)`
+                  }}
+                  title={satellite.name}
+                />
+                
+                {/* Satellite label - only show on high zoom */}
+                {scale > 100 && (
+                  <div
+                    className="planet-label satellite-label"
+                    style={{
+                      left: satX,
+                      top: satY + satSize / 2 + 2,
+                      fontSize: '0.6rem',
+                      opacity: 0.8
+                    }}
+                  >
+                    {satellite.name}
+                  </div>
+                )}
+              </div>
+            );
+          });
+        }
+        return null;
+      };
+      
       // Render planet with gradient if specified
       const planetStyle: React.CSSProperties = {
         left: x,
@@ -202,7 +283,8 @@ const Home = () => {
           planet.color === '#1abc9c' ? '26, 188, 156' : 
           planet.color === '#e67e22' ? '230, 126, 34' : 
           '255, 255, 255'
-        }, 0.8)`
+        }, 0.8)`,
+        cursor: planet.satellites && planet.satellites.length > 0 ? 'pointer' : 'default'
       };
       
       if (planet.gradient) {
@@ -239,10 +321,14 @@ const Home = () => {
             className="planet"
             style={planetStyle}
             title={planet.name}
+            onClick={() => handlePlanetClick(planet)}
           />
           
           {/* Render rings for Saturn */}
           {renderRings()}
+          
+          {/* Render satellites */}
+          {renderSatellites()}
           
           {/* Planet label */}
           <div
@@ -340,6 +426,15 @@ const Home = () => {
           </label>
         </div>
         
+        {/* Satellite Toggle */}
+        <button 
+          onClick={handleToggleSatellites} 
+          className={`control-button ml-2 ${showSatellites ? 'text-blue-400' : ''}`}
+          title={showSatellites ? "Hide Satellites" : "Show Satellites"}
+        >
+          <Moon size={18} />
+        </button>
+        
         {/* Info Toggle */}
         <button 
           onClick={() => setShowInfo(prev => !prev)} 
@@ -354,28 +449,81 @@ const Home = () => {
       {showInfo && (
         <div className="info-panel">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="info-panel-title">Solar System</h3>
+            <h3 className="info-panel-title">
+              {selectedPlanet ? selectedPlanet.name : "Solar System"}
+            </h3>
             <button 
-              onClick={() => setShowInfo(false)} 
+              onClick={() => {
+                setShowInfo(false);
+                setSelectedPlanet(null);
+              }} 
               className="text-gray-400 hover:text-white"
             >
               <X size={16} />
             </button>
           </div>
-          <div className="space-y-1 text-sm">
-            <p><span className="font-medium">Current Date:</span> {formatDate(currentDate)}</p>
-            <p><span className="font-medium">View Scale:</span> {isTrueScale ? "True Astronomical" : "Enhanced Visibility"}</p>
-            <p><span className="font-medium">Scale Factor:</span> 1:{Math.round(149.6e6 / scale).toLocaleString()}</p>
-            
-            <div className="border-t border-gray-700 my-2 pt-2">
-              <p className="text-xs text-gray-400 mb-1">Controls:</p>
-              <ul className="text-xs space-y-1">
-                <li>• Mouse drag to pan view</li>
-                <li>• Mouse wheel to zoom in/out</li>
-                <li>• Toggle true scale to see actual sizes</li>
-              </ul>
+          
+          {selectedPlanet ? (
+            <div className="space-y-2 text-sm">
+              {/* Planet details */}
+              <div>
+                <p><span className="font-medium">Diameter:</span> {(selectedPlanet.radius * 2).toLocaleString()} km</p>
+                <p><span className="font-medium">Distance from Sun:</span> {selectedPlanet.name !== 'Sun' ? 
+                  `${selectedPlanet.distance.toFixed(3)} AU (${(selectedPlanet.distance * 149.6).toLocaleString()} million km)` : 
+                  'N/A'}
+                </p>
+                {selectedPlanet.name !== 'Sun' && (
+                  <p><span className="font-medium">Orbit Eccentricity:</span> {selectedPlanet.orbit.e.toFixed(5)}</p>
+                )}
+              </div>
+              
+              {/* Satellite information */}
+              {selectedPlanet.satellites && selectedPlanet.satellites.length > 0 && (
+                <div className="mt-2">
+                  <h4 className="text-sm font-medium border-b border-gray-700 pb-1 mb-1">Satellites</h4>
+                  <div className="max-h-32 overflow-y-auto pr-1">
+                    {selectedPlanet.satellites.map((moon, idx) => (
+                      <div key={moon.name} className="mb-1 pb-1 border-b border-gray-800 last:border-0 last:mb-0 last:pb-0">
+                        <p className="font-medium text-xs">{moon.name}</p>
+                        <div className="grid grid-cols-2 gap-x-2 text-xs text-gray-400">
+                          <span>Diameter: {(moon.radius * 2).toLocaleString()} km</span>
+                          <span>Orbit: {moon.period.toFixed(2)} days</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <button 
+                onClick={() => setSelectedPlanet(null)} 
+                className="mt-2 w-full text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1 px-2 rounded"
+              >
+                Back to Overview
+              </button>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1 text-sm">
+              <p><span className="font-medium">Current Date:</span> {formatDate(currentDate)}</p>
+              <p><span className="font-medium">View Scale:</span> {isTrueScale ? "True Astronomical" : "Enhanced Visibility"}</p>
+              <p><span className="font-medium">Scale Factor:</span> 1:{Math.round(149.6e6 / scale).toLocaleString()}</p>
+              
+              <div className="border-t border-gray-700 my-2 pt-2">
+                <p className="text-xs text-gray-400 mb-1">Controls:</p>
+                <ul className="text-xs space-y-1">
+                  <li>• Mouse drag to pan view</li>
+                  <li>• Mouse wheel to zoom in/out</li>
+                  <li>• Toggle true scale to see actual sizes</li>
+                  <li>• Click on planets for detailed info</li>
+                </ul>
+              </div>
+              
+              <div className="border-t border-gray-700 my-2 pt-2">
+                <p className="text-xs text-gray-400 mb-1">Satellite Information:</p>
+                <p className="text-xs">This visualization includes the three largest satellites for each planet with accurate orbital calculations.</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
