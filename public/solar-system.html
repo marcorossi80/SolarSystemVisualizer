@@ -868,6 +868,18 @@
           ctx.lineWidth = 1;
           ctx.arc(satX, satY, satRadius + 1, 0, Math.PI * 2);
           ctx.stroke();
+          
+          // Add satellite name label
+          const labelX = satX;
+          const labelY = satY - satRadius - 5;
+          
+          // Only show labels when zoomed in enough
+          if (scale > 100 || (selectedPlanet && selectedPlanet.name === planet.name)) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = '10px var(--font-sans)';
+            ctx.textAlign = 'center';
+            ctx.fillText(satellite.name, labelX, labelY);
+          }
         });
       }
       
