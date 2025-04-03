@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System Visualizer - As of April 1, 2025</title>
+  <meta name="description" content="An interactive, accurate-scale visualization of our solar system with planet positions as of April 1, 2025." />
+  <style>
+    :root {
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --background: #fafafa;
+      --foreground: #171717;
+      --primary: #3b82f6;
+      --muted: #737373;
+      --card: #ffffff;
+      --border: #e5e5e5;
+    }
+    
+    body {
+      font-family: var(--font-sans);
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .card {
+      background: var(--card);
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .info-box {
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      padding: 1rem;
+      margin: 1rem 0;
+      background: rgba(255, 255, 255, 0.5);
+    }
+    
+    .feature-list {
+      text-align: left;
+      margin: 1rem 0;
+    }
+    
+    .feature-list li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .button {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background: #2563eb;
+    }
+    
+    .credits {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Solar System Visualizer</h1>
+    
+    <div class="card">
+      <h2>Interactive Planet Positions</h2>
+      <p>
+        This visualization shows our solar system with planets positioned as they would be on April 1, 2025.
+        Based on accurate astronomical calculations using Keplerian orbital elements.
+      </p>
+      
+      <div class="info-box">
+        <h3>Current Features</h3>
+        <ul class="feature-list">
+          <li>True astronomical scale toggle</li>
+          <li>Elliptical orbits with accurate eccentricity</li>
+          <li>Includes major satellites (moons)</li>
+          <li>Interactive zoom and pan</li>
+          <li>Date-based positioning</li>
+        </ul>
+      </div>
+      
+      <p>
+        <b>Ready to explore?</b> Access the full interactive visualization with all planets, moons, and their accurate positions.
+      </p>
+      
+      <a href="solar-system.html" class="button">Launch Interactive Visualization</a>
+      <a href="https://github.com/marcorossi80/SolarSystemVisualizer" class="button" style="background: #333; margin-left: 10px;">View on GitHub</a>
+    </div>
+    
+    <div class="credits">
+      Created using data from NASA and algorithms from Jean Meeus' "Astronomical Algorithms"
+    </div>
+  </div>
+</body>
+</html>
